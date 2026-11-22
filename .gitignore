@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+*.local
+
+node_modules/
+dist/
+unpackage/
+target/
+*.log
+*.mv.db
+*.trace.db
+
+.idea/
+.vscode/
+.DS_Store
+project.private.config.json

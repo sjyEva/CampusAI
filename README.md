@@ -10,7 +10,7 @@
 
 ### 项目状态
 
-项目处于初始化与需求设计阶段。以下内容为计划范围，不代表功能已经实现；具体需求、技术栈和运行步骤将在开发过程中逐步补充。
+项目处于第一周基础工程阶段，已建立后端、管理后台和学生小程序工程。基础链路包括登录、角色验证、课程列表、课程详情和退出登录。管理后台已通过构建，学生端平台构建与真实浏览器联调受当前执行环境限制，验证记录见运行说明。完整功能以六周计划为准。
 
 ### 计划功能
 
@@ -26,27 +26,19 @@ AI 回答用于辅助学习，使用时应结合原始课程资料核对。
 
 ### 技术方案
 
-前端、后端、数据库、AI 模型接口与检索方案尚待团队确认。确定后将在此补充版本要求、环境配置与选型说明。
+基础工程采用 Spring Boot 3、Vue 3 和 uni-app，按模块复用 RuoYi-Vue Spring Boot 3、RuoYi-Vue3 和 RuoYi-App 的认证及接口封装。各模块保留上游来源与 MIT 许可。开发演示默认使用 H2 内存样例数据库和临时会话。持久化存储与 AI 模型、检索方案见六周计划。
 
-### 规划目录
+### 仓库目录
 
-以下为拟采用的仓库结构，相关目录将随开发创建：
-
-- `frontend/`：用户端与管理员端前端代码。
-- `backend/`：业务接口、权限控制与 AI / 检索服务。
-- `docs/`：需求、系统设计、接口约定、测试及部署文档。
-- `.env.example`：环境变量示例，仅包含配置项和占位值。
-- `README.md`：项目介绍与开发入口（本文件）。
+- `backend/` — 后端接口、角色校验和课程数据。
+- `admin-web/` — 教师及管理员 Web 后台。
+- `student-miniapp/` — 学生微信小程序与 H5 联调入口。
+- `scripts/` — 联调验证脚本。
+- `docs/` — 运行说明及项目文档。
 
 ### 本地运行
 
-当前尚未提供可运行的应用。基础工程搭建后，此处将补充：
-
-1. 开发环境与依赖版本。
-2. 依赖安装步骤。
-3. 数据库初始化与示例数据导入步骤。
-4. 环境变量配置说明。
-5. 前后端启动命令与访问地址。
+参阅[运行与验证说明](docs/run-guide.md)，其中包含三端启动、演示账号、联调步骤及第一周待办。[六周开发计划](docs/six-week-development-plan.md)提供完整分工。
 
 真实 API Key、数据库密码等敏感配置应保存在本地环境变量或被 Git 忽略的配置文件中，不得提交到仓库。
 
@@ -89,7 +81,7 @@ Campus AI Course Assistant is a course learning support system for students at o
 
 ### Project Status
 
-The project is in the initialization and requirements design stage. The items below describe the planned scope, rather than completed features. Requirements, technology choices, and setup instructions will be refined during development.
+The week-one scaffold contains a backend, an administration web app, and a student mini-program with an H5 development entry. It connects sign-in, roles, course listing, course details, and sign-out. The admin production build passed. Student platform builds and live browser integration require an environment with the required network and runtime access. See the setup guide for verification records.
 
 ### Planned Features
 
@@ -105,27 +97,19 @@ AI-generated answers support learning and should be checked against the original
 
 ### Technology
 
-The frontend, backend, database, AI model API, and retrieval approach are yet to be confirmed by the team. Version requirements, configuration details, and design decisions will be added once agreed.
+The scaffold uses Spring Boot 3, Vue 3, and uni-app. Selected authentication modules and response contracts are adapted from RuoYi-Vue Spring Boot 3, RuoYi-Vue3, and RuoYi-App, with source attribution and MIT notices in each module. An in-memory H2 sample database and temporary sessions support local integration.
 
-### Planned Repository Structure
+### Repository Structure
 
-The following directories will be created as development progresses:
-
-- `frontend/`: Frontend code for the student and administration interfaces.
-- `backend/`: Business APIs, access control, and AI / retrieval services.
-- `docs/`: Requirements, system design, API contracts, testing, and deployment documentation.
-- `.env.example`: Example environment variables with placeholder values only.
-- `README.md`: Project overview and development entry point (this file).
+- `backend/` — API, role checks, and course data.
+- `admin-web/` — Teacher and administrator web app.
+- `student-miniapp/` — Student WeChat mini-program.
+- `scripts/` — Integration checks.
+- `docs/` — Setup and project documentation.
 
 ### Local Setup
 
-A runnable application is not yet available. Once the initial application is in place, this section will include:
-
-1. Required development tools and dependency versions.
-2. Dependency installation steps.
-3. Database initialization and sample data import.
-4. Environment variable configuration.
-5. Frontend and backend startup commands and local URLs.
+See the [setup and verification guide](docs/run-guide.md) for startup commands, demo accounts, verification steps, and the remaining week-one tasks.
 
 Keep real API keys, database passwords, and other secrets in local environment variables or Git-ignored configuration files. Never commit them.
 

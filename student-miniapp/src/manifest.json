@@ -1,0 +1,12 @@
+{
+  "name": "CampusAI 学生端",
+  "appid": "",
+  "description": "校园 AI 课程知识助手学生端",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "vueVersion": "3",
+  "mp-weixin": {
+    "appid": "",
+    "usingComponents": true
+  }
+}

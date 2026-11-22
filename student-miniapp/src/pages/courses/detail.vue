@@ -1,0 +1,81 @@
+<template>
+  <view class="page">
+    <view v-if="loading" class="muted">正在加载课程…</view>
+    <view v-else-if="error" class="error">
+      <view>{{ error }}</view>
+      <button v-if="courseId" class="retry" size="mini" @tap="loadCourse">重新加载</button>
+    </view>
+    <view v-else-if="course" class="course-card">
+      <view class="course-code">{{ course.courseCode }}</view>
+      <view class="title">{{ course.name }}</view>
+      <view v-if="course.description" class="muted course-description">{{ course.description }}</view>
+    </view>
+  </view>
+</template>
+
+<script>
+import { getCourse } from '../../api/courses.js'
+import { getToken } from '../../utils/auth.js'
+
+export default {
+  data() {
+    return { courseId: '', course: null, loading: false, error: '' }
+  },
+  onLoad(options) {
+    if (!getToken()) {
+      uni.reLaunch({ url: '/pages/login/index' })
+      return
+    }
+    if (!/^[1-9]\d*$/.test(options?.id || '')) {
+      this.error = '课程编号无效'
+      return
+    }
+    this.courseId = options.id
+    this.loadCourse()
+  },
+  methods: {
+    async loadCourse() {
+      if (this.loading) return
+      this.loading = true
+      this.error = ''
+      try {
+        const result = await getCourse(this.courseId)
+        if (!result.data?.id) throw new Error('课程详情响应格式有误')
+        this.course = result.data
+      } catch (error) {
+        if (error.code === 401 && !getToken()) {
+          uni.reLaunch({ url: '/pages/login/index' })
+          return
+        }
+        this.error = error.message
+      } finally {
+        this.loading = false
+      }
+    }
+  }
+}
+</script>
+
+<style scoped>
+.course-card {
+  background: #fff;
+  border: 1px solid #dce5ec;
+  border-radius: 16rpx;
+  padding: 30rpx;
+}
+
+.course-code {
+  color: #215882;
+  font-size: 25rpx;
+  margin-bottom: 10rpx;
+}
+
+.course-description {
+  margin-top: 20rpx;
+  overflow-wrap: anywhere;
+}
+
+.retry {
+  margin: 12rpx 0 0;
+}
+</style>
