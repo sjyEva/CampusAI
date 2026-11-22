@@ -1,8 +1,8 @@
 // Auth API wrappers adapted from RuoYi-Vue3. See LICENSE-RuoYi-Vue3.
 import request from './request.js'
 
-export function login(username, password) {
-  const data = { username, password }
+export function login(username, password, code, uuid) {
+  const data = { username, password, code, uuid }
   return request({
     url: '/login',
     method: 'post',
@@ -24,4 +24,8 @@ export function logout(token) {
     method: 'post',
     token,
   })
+}
+
+export function getCodeImg() {
+  return request({ url: '/captchaImage', method: 'get' })
 }

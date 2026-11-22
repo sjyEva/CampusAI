@@ -6,7 +6,6 @@ import { profile, signOut } from './session.js'
 const router = useRouter()
 const signingOut = ref(false)
 const roleLabel = computed(() => profile.value?.role === 'admin' ? '管理员' : '教师')
-const courseLabel = computed(() => profile.value?.role === 'admin' ? '全部课程' : '负责课程')
 
 async function handleSignOut() {
   signingOut.value = true
@@ -38,7 +37,7 @@ async function handleSignOut() {
     <div class="workspace-body">
       <nav class="sidebar" aria-label="管理后台导航">
         <RouterLink :to="{ name: 'courses' }" :class="{ 'router-link-active': $route.name === 'course' }">
-          {{ courseLabel }}
+          {{ profile.courseMenuTitle }}
         </RouterLink>
         <RouterLink :to="{ name: 'account' }">
           {{ profile.role === 'admin' ? '管理账号' : '教学账号' }}
