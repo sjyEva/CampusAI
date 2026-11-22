@@ -1,0 +1,21 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/index",
+      "style": { "navigationBarTitleText": "学生登录" }
+    },
+    {
+      "path": "pages/courses/index",
+      "style": { "navigationBarTitleText": "我的课程" }
+    },
+    {
+      "path": "pages/courses/detail",
+      "style": { "navigationBarTitleText": "课程详情" }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f4f6f9"
+  }
+}

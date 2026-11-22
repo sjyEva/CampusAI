@@ -1,0 +1,18 @@
+server:
+  address: ${CAMPUSAI_ADDRESS:127.0.0.1}
+  port: ${CAMPUSAI_PORT:8080}
+
+spring:
+  application:
+    name: campusai-backend
+  datasource:
+    url: '${CAMPUSAI_JDBC_URL:jdbc:h2:mem:campusai;MODE=MySQL;DB_CLOSE_DELAY=-1}'
+    username: ${CAMPUSAI_JDBC_USERNAME:sa}
+    password: ${CAMPUSAI_JDBC_PASSWORD:}
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+
+campusai:
+  dev-password: ${CAMPUSAI_DEV_PASSWORD:CampusAI-Dev-2026}
