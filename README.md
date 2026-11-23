@@ -10,7 +10,7 @@
 
 ### 项目状态
 
-项目处于第一周基础工程阶段，已建立后端、管理后台和学生小程序工程。基础链路包括登录、角色验证、课程列表、课程详情和退出登录。管理后台已通过构建，学生端平台构建与真实浏览器联调受当前执行环境限制，验证记录见运行说明。完整功能以六周计划为准。
+项目处于第一周基础工程阶段，已建立后端、管理后台和学生小程序工程。管理后台使用 Vue 3、Vite、Vue Router 和 Element Plus，按定稿原型提供登录、角色菜单和七个页面框架：工作台、课程与章节、资料管理、题库维护、问答与反馈、学习统计、用户与角色。登录、身份和课程范围走真实接口；资料、题库、问答和统计仍是示例数据，上传与发布留到第 2 周。学生端平台构建与真实浏览器联调见运行说明。
 
 ### 计划功能
 
@@ -26,7 +26,7 @@ AI 回答用于辅助学习，使用时应结合原始课程资料核对。
 
 ### 技术方案
 
-基础工程采用 Spring Boot 3、Vue 3 和 uni-app，按模块复用 RuoYi-Vue Spring Boot 3、RuoYi-Vue3 和 RuoYi-App 的认证及接口封装。各模块保留上游来源与 MIT 许可。开发演示默认使用 H2 内存样例数据库和临时会话。持久化存储与 AI 模型、检索方案见六周计划。
+基础工程采用 Spring Boot 3、Vue 3、Element Plus 和 uni-app，按模块复用 RuoYi-Vue Spring Boot 3、RuoYi-Vue3 和 RuoYi-App 的认证及接口封装。各模块保留上游来源与 MIT 许可。开发演示默认使用 H2 内存样例数据库和临时会话。持久化存储与 AI 模型、检索方案见六周计划。
 
 ### 仓库目录
 
@@ -81,7 +81,7 @@ Campus AI Course Assistant is a course learning support system for students at o
 
 ### Project Status
 
-The week-one scaffold contains a backend, an administration web app, and a student mini-program with an H5 development entry. It connects sign-in, roles, course listing, course details, and sign-out. The admin production build passed. Student platform builds and live browser integration require an environment with the required network and runtime access. See the setup guide for verification records.
+The week-one scaffold contains a backend, an administration web app, and a student mini-program with an H5 development entry. The admin app signs in against the real auth API, shows teacher and administrator menus, and frames the seven management pages. Material, quiz, Q&A, and statistics screens still use sample data. See the setup guide for accounts and which calls are mocked.
 
 ### Planned Features
 
