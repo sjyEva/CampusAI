@@ -1,0 +1,412 @@
+{
+  "version": "campusai-rag-eval-v1",
+  "frozenOn": "2026-11-23",
+  "provenance": "开发者为可复现功能验证自编的课程片段与问题，非教师课件，未由 F 独立标注或保管。acceptance 为预先固定的开发者验收样例，不能解释为独立盲测。",
+  "tuningPolicy": "首次运行前固定全部40题；不根据acceptance结果调整题目、答案或排序参数。若以后调参必须记录版本并保留首次结果。",
+  "files": {
+    "course-1-evaluation.txt": "bb43e8d92774ba1b6be07f93f9bef8a364b7bab1467dc2aae1f4b863f503f841",
+    "course-2-evaluation.txt": "c774bd4220a1f7036c3773cea4a62f0492efe5215105eadc6932b5b064b2a9b2"
+  },
+  "questions": [
+    {
+      "id": "C1-S01",
+      "split": "development",
+      "courseId": 1,
+      "question": "计算机系统由哪些部分组成？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 1,
+      "expectedQuote": "计算机系统由硬件和软件共同组成。"
+    },
+    {
+      "id": "C1-S02",
+      "split": "development",
+      "courseId": 1,
+      "question": "一个字节通常包含多少比特？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 3,
+      "expectedQuote": "一个字节通常由八个比特组成。"
+    },
+    {
+      "id": "C1-S03",
+      "split": "development",
+      "courseId": 1,
+      "question": "中央处理器处理机器指令通常经过哪些阶段？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 5,
+      "expectedQuote": "中央处理器通常按照取指、译码和执行的过程处理机器指令。"
+    },
+    {
+      "id": "C1-S04",
+      "split": "development",
+      "courseId": 1,
+      "question": "高速缓存利用哪两种局部性减少访存开销？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 7,
+      "expectedQuote": "高速缓存利用程序访问的时间局部性和空间局部性减少平均访存开销。"
+    },
+    {
+      "id": "C1-S05",
+      "split": "development",
+      "courseId": 1,
+      "question": "操作系统主要管理哪些资源？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 9,
+      "expectedQuote": "操作系统负责管理处理器、内存、文件和输入输出设备等资源"
+    },
+    {
+      "id": "C1-S06",
+      "split": "development",
+      "courseId": 1,
+      "question": "同一进程中的线程通常共享哪些资源？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 11,
+      "expectedQuote": "同一进程内的多个线程通常共享地址空间和打开的文件"
+    },
+    {
+      "id": "C1-S07",
+      "split": "development",
+      "courseId": 1,
+      "question": "分页系统用什么记录虚拟页与物理页框的对应关系？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 13,
+      "expectedQuote": "页表记录两者的对应关系。"
+    },
+    {
+      "id": "C1-S08",
+      "split": "development",
+      "courseId": 1,
+      "question": "相对路径以哪个位置为起点解释？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 15,
+      "expectedQuote": "相对路径以当前工作目录为起点解释。"
+    },
+    {
+      "id": "C1-S09",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "网络分层对模块间依赖有什么帮助？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 17,
+      "expectedQuote": "分层可以降低模块间的直接依赖"
+    },
+    {
+      "id": "C1-S10",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "域名解析成功能否保证目标应用服务正常？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 19,
+      "expectedQuote": "域名解析成功只说明取得了相应记录，并不保证目标应用服务正常工作。"
+    },
+    {
+      "id": "C1-S11",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "关系数据库主键值需要满足哪些约束？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 21,
+      "expectedQuote": "主键值应保持唯一并且不能为空。"
+    },
+    {
+      "id": "C1-S12",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "数据库事务的原子性要求一组操作怎样完成？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 23,
+      "expectedQuote": "原子性要求这些操作要么全部提交，要么在失败时全部回滚"
+    },
+    {
+      "id": "C1-S13",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "算法时间复杂度是否直接预测精确运行秒数？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 25,
+      "expectedQuote": "它关注增长关系，而不是直接预测某台设备上的精确运行秒数。"
+    },
+    {
+      "id": "C1-S14",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "栈遵循什么访问规则？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 27,
+      "expectedQuote": "栈遵循后进先出的访问规则"
+    },
+    {
+      "id": "C1-S15",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "哈希摘要是否是原文的可逆压缩副本？",
+      "supported": true,
+      "sourceFile": "course-1-evaluation.txt",
+      "expectedParagraph": 29,
+      "expectedQuote": "摘要并不是原文的可逆压缩副本"
+    },
+    {
+      "id": "C2-S01",
+      "split": "development",
+      "courseId": 2,
+      "question": "软件需求的验收标准应该怎样表达？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 1,
+      "expectedQuote": "验收标准应写成可以观察和核对的条件"
+    },
+    {
+      "id": "C2-S02",
+      "split": "development",
+      "courseId": 2,
+      "question": "用户故事能否替代全部交互细节和验收条件？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 3,
+      "expectedQuote": "故事用于促进讨论，不能替代全部交互细节和验收条件。"
+    },
+    {
+      "id": "C2-S03",
+      "split": "development",
+      "courseId": 2,
+      "question": "产品待办列表通常依据哪些因素调整顺序？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 5,
+      "expectedQuote": "根据价值、风险和依赖关系持续调整顺序。"
+    },
+    {
+      "id": "C2-S04",
+      "split": "development",
+      "courseId": 2,
+      "question": "每日站会通常控制在多长时间以内？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 7,
+      "expectedQuote": "会议时长通常控制在十五分钟以内"
+    },
+    {
+      "id": "C2-S05",
+      "split": "development",
+      "courseId": 2,
+      "question": "迭代回顾主要关注什么？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 9,
+      "expectedQuote": "迭代回顾关注团队的工作方式"
+    },
+    {
+      "id": "C2-S06",
+      "split": "development",
+      "courseId": 2,
+      "question": "使用版本控制分支是否会自动消除合并冲突？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 11,
+      "expectedQuote": "分支并不会自动消除冲突"
+    },
+    {
+      "id": "C2-S07",
+      "split": "development",
+      "courseId": 2,
+      "question": "持续集成构建成功能够证明什么？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 13,
+      "expectedQuote": "构建成功只能证明已配置检查通过"
+    },
+    {
+      "id": "C2-S08",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "集成测试主要关注什么？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 15,
+      "expectedQuote": "集成测试则关注多个模块连接后能否按照约定共同工作。"
+    },
+    {
+      "id": "C2-S09",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "边界值分析重点检查哪些输入位置？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 17,
+      "expectedQuote": "边界值分析重点检查允许范围的端点及其邻近位置"
+    },
+    {
+      "id": "C2-S10",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "较高的软件测试覆盖率能否自动证明需求已经完整满足？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 19,
+      "expectedQuote": "覆盖率高并不自动证明断言正确或需求已经完整满足。"
+    },
+    {
+      "id": "C2-S11",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "接口的权限检查应由哪一端承担？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 21,
+      "expectedQuote": "权限检查属于服务端责任"
+    },
+    {
+      "id": "C2-S12",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "数据库迁移脚本应该与什么保持版本对应？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 23,
+      "expectedQuote": "迁移脚本与代码应对应同一版本"
+    },
+    {
+      "id": "C2-S13",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "低耦合要求模块之间怎样协作？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 25,
+      "expectedQuote": "低耦合表示模块之间通过有限且稳定的接口协作。"
+    },
+    {
+      "id": "C2-S14",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "课程问答在模型超时后可以怎样回退？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 27,
+      "expectedQuote": "模型超时后仍可返回相关原文和来源，同时标明当前没有生成答案。"
+    },
+    {
+      "id": "C2-S15",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "评估项目风险时应同时关注哪两个方面？",
+      "supported": true,
+      "sourceFile": "course-2-evaluation.txt",
+      "expectedParagraph": 29,
+      "expectedQuote": "需要同时关注发生可能性和影响程度。"
+    },
+    {
+      "id": "U01",
+      "split": "development",
+      "courseId": 1,
+      "question": "量子计算的 Shor 算法如何分解大整数？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U02",
+      "split": "development",
+      "courseId": 1,
+      "question": "分页系统的最优页面置换算法怎样选择淘汰页面？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U03",
+      "split": "development",
+      "courseId": 2,
+      "question": "软件测试中的 MC/DC 覆盖率如何计算？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U04",
+      "split": "development",
+      "courseId": 2,
+      "question": "Scrum 框架的产品负责人认证考试费用是多少？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U05",
+      "split": "development",
+      "courseId": 1,
+      "question": "数据库事务的两阶段提交协议如何处理协调者故障？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U06",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "网络中的 BBR 拥塞控制如何估算瓶颈带宽？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U07",
+      "split": "acceptance",
+      "courseId": 1,
+      "question": "域名系统的 DNSSEC 密钥轮换具体如何操作？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U08",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "数据库迁移中 PostgreSQL 的逻辑复制槽如何创建？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U09",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "采用 COCOMO II 模型估算软件项目人月的公式是什么？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    },
+    {
+      "id": "U10",
+      "split": "acceptance",
+      "courseId": 2,
+      "question": "这门软件工程课程的期末考试日期是哪天？",
+      "supported": false,
+      "sourceFile": null,
+      "expectedParagraph": null,
+      "expectedQuote": null
+    }
+  ]
+}

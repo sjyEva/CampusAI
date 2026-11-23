@@ -1,0 +1,783 @@
+{
+  "version" : "campusai-rag-eval-v1",
+  "executedAt" : "2026-11-23T02:30:24.436334700Z",
+  "questionsSha256" : "db2a6a4c442d2098683d68290e97483720d581ac361c2aabe04665ee5863e616",
+  "corpusSha256" : {
+    "course-1-evaluation.txt" : "bb43e8d92774ba1b6be07f93f9bef8a364b7bab1467dc2aae1f4b863f503f841",
+    "course-2-evaluation.txt" : "c774bd4220a1f7036c3773cea4a62f0492efe5215105eadc6932b5b064b2a9b2"
+  },
+  "provenance" : "开发者为可复现功能验证自编的课程片段与问题，非教师课件，未由 F 独立标注或保管。acceptance 为预先固定的开发者验收样例，不能解释为独立盲测。",
+  "parameters" : {
+    "b" : 0.75,
+    "minimumCoverage" : 0.5,
+    "analyzer" : "SmartChineseAnalyzer 9.12.3",
+    "topK" : 3,
+    "k1" : 1.2,
+    "maxChunkChars" : 700
+  },
+  "environment" : {
+    "arch" : "amd64",
+    "os" : "Windows 11",
+    "java" : "17.0.15"
+  },
+  "chunkCounts" : {
+    "course2" : 5,
+    "course1" : 5
+  },
+  "totalRetrievalElapsedMs" : 1205.2029,
+  "summary" : {
+    "development" : {
+      "unsupportedEmptyCount" : 2,
+      "hitAt3Count" : 15,
+      "hitAt3" : 1.0,
+      "supportedQuestions" : 15,
+      "unsupportedFalsePositiveCount" : 3,
+      "unsupportedQuestions" : 5
+    },
+    "acceptance" : {
+      "unsupportedEmptyCount" : 4,
+      "hitAt3Count" : 15,
+      "hitAt3" : 1.0,
+      "supportedQuestions" : 15,
+      "unsupportedFalsePositiveCount" : 1,
+      "unsupportedQuestions" : 5
+    }
+  },
+  "questions" : [ {
+    "id" : "C1-S01",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "计算机系统由哪些部分组成？",
+    "supported" : true,
+    "expectedParagraph" : 1,
+    "expectedQuote" : "计算机系统由硬件和软件共同组成。",
+    "goldChunkIds" : [ "C1-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C1-P1-5-1",
+      "score" : 5.842068618493722,
+      "coverage" : 0.8
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 82.7342
+  }, {
+    "id" : "C1-S02",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "一个字节通常包含多少比特？",
+    "supported" : true,
+    "expectedParagraph" : 3,
+    "expectedQuote" : "一个字节通常由八个比特组成。",
+    "goldChunkIds" : [ "C1-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C1-P1-5-1",
+      "score" : 5.89898391085154,
+      "coverage" : 0.8
+    }, {
+      "id" : "C1-P7-11-2",
+      "score" : 3.1867867331517203,
+      "coverage" : 0.6
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 39.173
+  }, {
+    "id" : "C1-S03",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "中央处理器处理机器指令通常经过哪些阶段？",
+    "supported" : true,
+    "expectedParagraph" : 5,
+    "expectedQuote" : "中央处理器通常按照取指、译码和执行的过程处理机器指令。",
+    "goldChunkIds" : [ "C1-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C1-P1-5-1",
+      "score" : 9.842469570514162,
+      "coverage" : 0.875
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 28.1117
+  }, {
+    "id" : "C1-S04",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "高速缓存利用哪两种局部性减少访存开销？",
+    "supported" : true,
+    "expectedParagraph" : 7,
+    "expectedQuote" : "高速缓存利用程序访问的时间局部性和空间局部性减少平均访存开销。",
+    "goldChunkIds" : [ "C1-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C1-P7-11-2",
+      "score" : 12.536425877474562,
+      "coverage" : 0.6666666666666666
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 33.8876
+  }, {
+    "id" : "C1-S05",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "操作系统主要管理哪些资源？",
+    "supported" : true,
+    "expectedParagraph" : 9,
+    "expectedQuote" : "操作系统负责管理处理器、内存、文件和输入输出设备等资源",
+    "goldChunkIds" : [ "C1-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C1-P7-11-2",
+      "score" : 3.3736653266639536,
+      "coverage" : 0.75
+    }, {
+      "id" : "C1-P25-29-5",
+      "score" : 2.237800923210384,
+      "coverage" : 0.5
+    }, {
+      "id" : "C1-P1-5-1",
+      "score" : 1.177768618356479,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 30.0393
+  }, {
+    "id" : "C1-S06",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "同一进程中的线程通常共享哪些资源？",
+    "supported" : true,
+    "expectedParagraph" : 11,
+    "expectedQuote" : "同一进程内的多个线程通常共享地址空间和打开的文件",
+    "goldChunkIds" : [ "C1-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C1-P7-11-2",
+      "score" : 12.04363280828366,
+      "coverage" : 1.0
+    }, {
+      "id" : "C1-P19-23-4",
+      "score" : 2.6495419654657093,
+      "coverage" : 0.5555555555555556
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 24.3573
+  }, {
+    "id" : "C1-S07",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "分页系统用什么记录虚拟页与物理页框的对应关系？",
+    "supported" : true,
+    "expectedParagraph" : 13,
+    "expectedQuote" : "页表记录两者的对应关系。",
+    "goldChunkIds" : [ "C1-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C1-P13-17-3",
+      "score" : 13.601498636255698,
+      "coverage" : 0.9090909090909091
+    }, {
+      "id" : "C1-P19-23-4",
+      "score" : 4.356916520517671,
+      "coverage" : 0.5454545454545454
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 16.247801
+  }, {
+    "id" : "C1-S08",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "相对路径以哪个位置为起点解释？",
+    "supported" : true,
+    "expectedParagraph" : 15,
+    "expectedQuote" : "相对路径以当前工作目录为起点解释。",
+    "goldChunkIds" : [ "C1-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C1-P13-17-3",
+      "score" : 7.481861053551922,
+      "coverage" : 0.8571428571428571
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 26.6321
+  }, {
+    "id" : "C1-S09",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "网络分层对模块间依赖有什么帮助？",
+    "supported" : true,
+    "expectedParagraph" : 17,
+    "expectedQuote" : "分层可以降低模块间的直接依赖",
+    "goldChunkIds" : [ "C1-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C1-P13-17-3",
+      "score" : 6.29267839071832,
+      "coverage" : 0.625
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 27.614799
+  }, {
+    "id" : "C1-S10",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "域名解析成功能否保证目标应用服务正常？",
+    "supported" : true,
+    "expectedParagraph" : 19,
+    "expectedQuote" : "域名解析成功只说明取得了相应记录，并不保证目标应用服务正常工作。",
+    "goldChunkIds" : [ "C1-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C1-P19-23-4",
+      "score" : 11.449455419350077,
+      "coverage" : 0.8888888888888888
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 22.359
+  }, {
+    "id" : "C1-S11",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "关系数据库主键值需要满足哪些约束？",
+    "supported" : true,
+    "expectedParagraph" : 21,
+    "expectedQuote" : "主键值应保持唯一并且不能为空。",
+    "goldChunkIds" : [ "C1-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C1-P19-23-4",
+      "score" : 11.171522458264874,
+      "coverage" : 0.875
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 20.224901
+  }, {
+    "id" : "C1-S12",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "数据库事务的原子性要求一组操作怎样完成？",
+    "supported" : true,
+    "expectedParagraph" : 23,
+    "expectedQuote" : "原子性要求这些操作要么全部提交，要么在失败时全部回滚",
+    "goldChunkIds" : [ "C1-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C1-P19-23-4",
+      "score" : 12.55642319723309,
+      "coverage" : 1.0
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 17.953999
+  }, {
+    "id" : "C1-S13",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "算法时间复杂度是否直接预测精确运行秒数？",
+    "supported" : true,
+    "expectedParagraph" : 25,
+    "expectedQuote" : "它关注增长关系，而不是直接预测某台设备上的精确运行秒数。",
+    "goldChunkIds" : [ "C1-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C1-P25-29-5",
+      "score" : 11.496511067158105,
+      "coverage" : 1.0
+    }, {
+      "id" : "C1-P13-17-3",
+      "score" : 2.7104281753954966,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 16.2532
+  }, {
+    "id" : "C1-S14",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "栈遵循什么访问规则？",
+    "supported" : true,
+    "expectedParagraph" : 27,
+    "expectedQuote" : "栈遵循后进先出的访问规则",
+    "goldChunkIds" : [ "C1-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C1-P25-29-5",
+      "score" : 4.747117595401656,
+      "coverage" : 1.0
+    }, {
+      "id" : "C1-P7-11-2",
+      "score" : 1.0499369802824932,
+      "coverage" : 0.5
+    }, {
+      "id" : "C1-P19-23-4",
+      "score" : 1.0147428010668909,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 21.909799
+  }, {
+    "id" : "C1-S15",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "哈希摘要是否是原文的可逆压缩副本？",
+    "supported" : true,
+    "expectedParagraph" : 29,
+    "expectedQuote" : "摘要并不是原文的可逆压缩副本",
+    "goldChunkIds" : [ "C1-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C1-P25-29-5",
+      "score" : 14.322840993588217,
+      "coverage" : 1.0
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 29.2135
+  }, {
+    "id" : "C2-S01",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "软件需求的验收标准应该怎样表达？",
+    "supported" : true,
+    "expectedParagraph" : 1,
+    "expectedQuote" : "验收标准应写成可以观察和核对的条件",
+    "goldChunkIds" : [ "C2-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C2-P1-5-1",
+      "score" : 7.64382306114483,
+      "coverage" : 0.8333333333333334
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 29.008
+  }, {
+    "id" : "C2-S02",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "用户故事能否替代全部交互细节和验收条件？",
+    "supported" : true,
+    "expectedParagraph" : 3,
+    "expectedQuote" : "故事用于促进讨论，不能替代全部交互细节和验收条件。",
+    "goldChunkIds" : [ "C2-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C2-P1-5-1",
+      "score" : 9.45185994566061,
+      "coverage" : 0.9
+    }, {
+      "id" : "C2-P13-17-3",
+      "score" : 3.981169109178307,
+      "coverage" : 0.6
+    }, {
+      "id" : "C2-P25-29-5",
+      "score" : 2.290622025875762,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 24.041099
+  }, {
+    "id" : "C2-S03",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "产品待办列表通常依据哪些因素调整顺序？",
+    "supported" : true,
+    "expectedParagraph" : 5,
+    "expectedQuote" : "根据价值、风险和依赖关系持续调整顺序。",
+    "goldChunkIds" : [ "C2-P1-5-1" ],
+    "top3" : [ {
+      "id" : "C2-P1-5-1",
+      "score" : 8.595304253367097,
+      "coverage" : 0.75
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 23.8336
+  }, {
+    "id" : "C2-S04",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "每日站会通常控制在多长时间以内？",
+    "supported" : true,
+    "expectedParagraph" : 7,
+    "expectedQuote" : "会议时长通常控制在十五分钟以内",
+    "goldChunkIds" : [ "C2-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C2-P7-11-2",
+      "score" : 11.697015721938996,
+      "coverage" : 1.0
+    }, {
+      "id" : "C2-P13-17-3",
+      "score" : 2.348484909640392,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 26.2296
+  }, {
+    "id" : "C2-S05",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "迭代回顾主要关注什么？",
+    "supported" : true,
+    "expectedParagraph" : 9,
+    "expectedQuote" : "迭代回顾关注团队的工作方式",
+    "goldChunkIds" : [ "C2-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C2-P7-11-2",
+      "score" : 5.5421049378145835,
+      "coverage" : 0.8
+    }, {
+      "id" : "C2-P1-5-1",
+      "score" : 2.7159331613589694,
+      "coverage" : 0.6
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 28.151801
+  }, {
+    "id" : "C2-S06",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "使用版本控制分支是否会自动消除合并冲突？",
+    "supported" : true,
+    "expectedParagraph" : 11,
+    "expectedQuote" : "分支并不会自动消除冲突",
+    "goldChunkIds" : [ "C2-P7-11-2" ],
+    "top3" : [ {
+      "id" : "C2-P7-11-2",
+      "score" : 10.349636885029069,
+      "coverage" : 0.8888888888888888
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 25.8644
+  }, {
+    "id" : "C2-S07",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "持续集成构建成功能够证明什么？",
+    "supported" : true,
+    "expectedParagraph" : 13,
+    "expectedQuote" : "构建成功只能证明已配置检查通过",
+    "goldChunkIds" : [ "C2-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C2-P13-17-3",
+      "score" : 6.969524710243151,
+      "coverage" : 1.0
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 34.412
+  }, {
+    "id" : "C2-S08",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "集成测试主要关注什么？",
+    "supported" : true,
+    "expectedParagraph" : 15,
+    "expectedQuote" : "集成测试则关注多个模块连接后能否按照约定共同工作。",
+    "goldChunkIds" : [ "C2-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C2-P13-17-3",
+      "score" : 3.386432009544504,
+      "coverage" : 0.75
+    }, {
+      "id" : "C2-P25-29-5",
+      "score" : 0.5822391050904937,
+      "coverage" : 0.5
+    }, {
+      "id" : "C2-P1-5-1",
+      "score" : 0.5815153072030087,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 25.508
+  }, {
+    "id" : "C2-S09",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "边界值分析重点检查哪些输入位置？",
+    "supported" : true,
+    "expectedParagraph" : 17,
+    "expectedQuote" : "边界值分析重点检查允许范围的端点及其邻近位置",
+    "goldChunkIds" : [ "C2-P13-17-3" ],
+    "top3" : [ {
+      "id" : "C2-P13-17-3",
+      "score" : 7.024940379269489,
+      "coverage" : 1.0
+    }, {
+      "id" : "C2-P1-5-1",
+      "score" : 2.402357044780471,
+      "coverage" : 0.5714285714285714
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 34.138301
+  }, {
+    "id" : "C2-S10",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "较高的软件测试覆盖率能否自动证明需求已经完整满足？",
+    "supported" : true,
+    "expectedParagraph" : 19,
+    "expectedQuote" : "覆盖率高并不自动证明断言正确或需求已经完整满足。",
+    "goldChunkIds" : [ "C2-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C2-P19-23-4",
+      "score" : 9.257458036022598,
+      "coverage" : 0.8333333333333334
+    }, {
+      "id" : "C2-P13-17-3",
+      "score" : 6.453592698766387,
+      "coverage" : 0.5833333333333334
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 24.148499
+  }, {
+    "id" : "C2-S11",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "接口的权限检查应由哪一端承担？",
+    "supported" : true,
+    "expectedParagraph" : 21,
+    "expectedQuote" : "权限检查属于服务端责任",
+    "goldChunkIds" : [ "C2-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C2-P19-23-4",
+      "score" : 3.866397124768834,
+      "coverage" : 0.6666666666666666
+    }, {
+      "id" : "C2-P7-11-2",
+      "score" : 3.502821676319803,
+      "coverage" : 0.5555555555555556
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 25.4032
+  }, {
+    "id" : "C2-S12",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "数据库迁移脚本应该与什么保持版本对应？",
+    "supported" : true,
+    "expectedParagraph" : 23,
+    "expectedQuote" : "迁移脚本与代码应对应同一版本",
+    "goldChunkIds" : [ "C2-P19-23-4" ],
+    "top3" : [ {
+      "id" : "C2-P19-23-4",
+      "score" : 7.028705092674281,
+      "coverage" : 0.625
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 30.3303
+  }, {
+    "id" : "C2-S13",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "低耦合要求模块之间怎样协作？",
+    "supported" : true,
+    "expectedParagraph" : 25,
+    "expectedQuote" : "低耦合表示模块之间通过有限且稳定的接口协作。",
+    "goldChunkIds" : [ "C2-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C2-P25-29-5",
+      "score" : 6.621590105953458,
+      "coverage" : 0.8333333333333334
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 31.9636
+  }, {
+    "id" : "C2-S14",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "课程问答在模型超时后可以怎样回退？",
+    "supported" : true,
+    "expectedParagraph" : 27,
+    "expectedQuote" : "模型超时后仍可返回相关原文和来源，同时标明当前没有生成答案。",
+    "goldChunkIds" : [ "C2-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C2-P25-29-5",
+      "score" : 9.9105925493255,
+      "coverage" : 1.0
+    }, {
+      "id" : "C2-P19-23-4",
+      "score" : 2.088637615913494,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 26.1964
+  }, {
+    "id" : "C2-S15",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "评估项目风险时应同时关注哪两个方面？",
+    "supported" : true,
+    "expectedParagraph" : 29,
+    "expectedQuote" : "需要同时关注发生可能性和影响程度。",
+    "goldChunkIds" : [ "C2-P25-29-5" ],
+    "top3" : [ {
+      "id" : "C2-P13-17-3",
+      "score" : 4.586169173506206,
+      "coverage" : 0.6363636363636364
+    }, {
+      "id" : "C2-P25-29-5",
+      "score" : 4.218801123410242,
+      "coverage" : 0.5454545454545454
+    } ],
+    "hitAt3" : true,
+    "emptyOnUnsupported" : null,
+    "elapsedMs" : 27.0633
+  }, {
+    "id" : "U01",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "量子计算的 Shor 算法如何分解大整数？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 31.066501
+  }, {
+    "id" : "U02",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "分页系统的最优页面置换算法怎样选择淘汰页面？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ {
+      "id" : "C1-P13-17-3",
+      "score" : 9.94843605281843,
+      "coverage" : 0.6
+    } ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : false,
+    "elapsedMs" : 34.004
+  }, {
+    "id" : "U03",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "软件测试中的 MC/DC 覆盖率如何计算？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ {
+      "id" : "C2-P19-23-4",
+      "score" : 7.782540220607816,
+      "coverage" : 0.8571428571428571
+    } ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : false,
+    "elapsedMs" : 34.424
+  }, {
+    "id" : "U04",
+    "split" : "development",
+    "courseId" : 2,
+    "question" : "Scrum 框架的产品负责人认证考试费用是多少？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 29.6364
+  }, {
+    "id" : "U05",
+    "split" : "development",
+    "courseId" : 1,
+    "question" : "数据库事务的两阶段提交协议如何处理协调者故障？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ {
+      "id" : "C1-P19-23-4",
+      "score" : 9.697662910426056,
+      "coverage" : 0.7
+    } ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : false,
+    "elapsedMs" : 28.559999
+  }, {
+    "id" : "U06",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "网络中的 BBR 拥塞控制如何估算瓶颈带宽？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 30.632299
+  }, {
+    "id" : "U07",
+    "split" : "acceptance",
+    "courseId" : 1,
+    "question" : "域名系统的 DNSSEC 密钥轮换具体如何操作？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ {
+      "id" : "C1-P19-23-4",
+      "score" : 6.883140443411965,
+      "coverage" : 0.875
+    }, {
+      "id" : "C1-P25-29-5",
+      "score" : 3.440358849690552,
+      "coverage" : 0.5
+    } ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : false,
+    "elapsedMs" : 28.0665
+  }, {
+    "id" : "U08",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "数据库迁移中 PostgreSQL 的逻辑复制槽如何创建？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 30.826999
+  }, {
+    "id" : "U09",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "采用 COCOMO II 模型估算软件项目人月的公式是什么？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 34.612601
+  }, {
+    "id" : "U10",
+    "split" : "acceptance",
+    "courseId" : 2,
+    "question" : "这门软件工程课程的期末考试日期是哪天？",
+    "supported" : false,
+    "expectedParagraph" : null,
+    "expectedQuote" : null,
+    "goldChunkIds" : [ ],
+    "top3" : [ ],
+    "hitAt3" : null,
+    "emptyOnUnsupported" : true,
+    "elapsedMs" : 27.618299
+  } ]
+}

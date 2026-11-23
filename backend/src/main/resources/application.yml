@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: campusai-backend
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 11MB
   datasource:
     url: '${CAMPUSAI_JDBC_URL:jdbc:h2:mem:campusai;MODE=MySQL;DB_CLOSE_DELAY=-1}'
     username: ${CAMPUSAI_JDBC_USERNAME:sa}
@@ -16,3 +20,10 @@ spring:
 
 campusai:
   dev-password: ${CAMPUSAI_DEV_PASSWORD:CampusAI-Dev-2026}
+  rag:
+    minimum-coverage: ${CAMPUSAI_RAG_MINIMUM_COVERAGE:0.5}
+    model:
+      base-url: ${CAMPUSAI_MODEL_BASE_URL:}
+      api-key: ${CAMPUSAI_MODEL_API_KEY:}
+      name: ${CAMPUSAI_MODEL_NAME:}
+      timeout-seconds: ${CAMPUSAI_MODEL_TIMEOUT_SECONDS:10}
