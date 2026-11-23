@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer;
@@ -38,6 +40,19 @@ public class Bm25Engine {
             "一个", "一种", "进行", "可以", "能够", "是", "的", "了", "吗", "呢",
             "what", "how", "why", "which", "who", "where", "when", "please", "pleas",
             "explain", "describe", "describ", "does", "do", "did", "could", "would");
+
+    // SmartChineseAnalyzer can split BM25, MC/DC or C++ into ordinary terms.
+    // Preserve explicitly named identifiers as an additional precision boundary;
+    // this does not imply that a candidate answers the question semantically.
+    private static final Pattern ASCII_IDENTIFIER = Pattern.compile(
+            "(?<![A-Za-z0-9_+#])[A-Za-z][A-Za-z0-9]*(?:[./_\\-][A-Za-z0-9]+|[+#]+[A-Za-z0-9]*)*(?![A-Za-z0-9_+#])");
+    private static final Pattern NAMED_VERSION = Pattern.compile(
+            "(?<![A-Za-z0-9_])([A-Za-z][A-Za-z0-9+#._-]*)[ \\t]+([vV]?\\d+(?:\\.\\d+)*)(?![A-Za-z0-9_])");
+    private static final Set<String> ORDINARY_ENGLISH_WORDS = Set.of(
+            "a", "i", "an", "the", "and", "or", "not", "is", "are", "was", "were", "be", "been", "being",
+            "of", "to", "in", "on", "at", "for", "from", "with", "by", "as", "it", "its", "this", "that",
+            "these", "those", "can", "will", "shall", "should", "may", "must", "has", "have", "had",
+            "chapter", "section", "page", "figure", "table", "question", "top", "example", "version");
 
     private final double minimumCoverage;
 
@@ -68,6 +83,7 @@ public class Bm25Engine {
             throw new IllegalArgumentException("问题不能超过 " + MAX_QUERY_CHARS + " 个字符");
         }
         Set<String> queryTerms = new LinkedHashSet<>(tokenize(query));
+        Set<String> identifiers = requiredIdentifiers(query);
         if (queryTerms.size() > MAX_QUERY_TERMS) {
             throw new IllegalArgumentException("问题包含过多检索词，请缩小问题范围");
         }
@@ -97,7 +113,8 @@ public class Bm25Engine {
                     documentFrequencies.merge(term, 1, Integer::sum);
                 }
             }
-            index.add(new IndexedDocument(document.id(), frequencies, tokens.size()));
+            index.add(new IndexedDocument(document.id(), frequencies, tokens.size(),
+                    identifiers.isEmpty() || identifierInventory(document.text()).containsAll(identifiers)));
             totalLength += tokens.size();
         }
         if (index.isEmpty()) {
@@ -106,6 +123,7 @@ public class Bm25Engine {
         double averageLength = (double) totalLength / index.size();
         List<Hit> hits = new ArrayList<>();
         for (IndexedDocument document : index) {
+            if (!document.containsRequiredIdentifiers()) continue;
             double score = 0;
             int matched = 0;
             for (String term : queryTerms) {
@@ -128,6 +146,64 @@ public class Bm25Engine {
                 .sorted(Comparator.comparingDouble(Hit::score).reversed().thenComparing(Hit::id))
                 .limit(limit)
                 .toList();
+    }
+
+    /**
+     * Exact normalized identifiers in a query are mandatory in each candidate.
+     * Ordinary English-only questions retain stemming; mixed Chinese/English
+     * questions treat non-grammatical Latin words as explicitly named terms.
+     * No alias expansion is inferred: a source using only a translated full name
+     * may conservatively be missed, and presence still does not prove support.
+     */
+    Set<String> requiredIdentifiers(String query) {
+        String normalized = Normalizer.normalize(query, Normalizer.Form.NFKC);
+        boolean hasChinese = normalized.codePoints().anyMatch(c -> Character.UnicodeScript.of(c) == Character.UnicodeScript.HAN);
+        // In an entirely uppercase English sentence, casing no longer signals
+        // that each word is an acronym. Digits and technical punctuation still do.
+        boolean uppercaseSentence = !hasChinese && normalized.chars().noneMatch(c -> c >= 'a' && c <= 'z')
+                && ASCII_IDENTIFIER.matcher(normalized).results().count() >= 3;
+        Set<String> required = new LinkedHashSet<>();
+        Matcher matcher = ASCII_IDENTIFIER.matcher(normalized);
+        while (matcher.find()) {
+            String identifier = matcher.group();
+            String lower = identifier.toLowerCase(Locale.ROOT);
+            boolean explicit = hasChinese || identifier.chars().anyMatch(Character::isDigit)
+                    || identifier.matches(".*[./_+#-].*")
+                    || identifier.matches(".*[a-z][A-Z].*")
+                    || (!uppercaseSentence && identifier.equals(identifier.toUpperCase(Locale.ROOT)));
+            if (explicit && !QUESTION_STOP_WORDS.contains(lower) && !ORDINARY_ENGLISH_WORDS.contains(lower)) {
+                required.add(lower);
+            }
+        }
+        Matcher versions = NAMED_VERSION.matcher(normalized);
+        while (versions.find()) {
+            String name = versions.group(1);
+            String lower = name.toLowerCase(Locale.ROOT);
+            if (!ORDINARY_ENGLISH_WORDS.contains(lower) && !QUESTION_STOP_WORDS.contains(lower)
+                    && (hasChinese || Character.isUpperCase(name.charAt(0)))) {
+                required.remove(lower);
+                required.add(lower + versions.group(2).toLowerCase(Locale.ROOT).replaceFirst("^v", ""));
+            }
+        }
+        return Set.copyOf(required);
+    }
+
+    private Set<String> identifierInventory(String text) {
+        String normalized = Normalizer.normalize(text, Normalizer.Form.NFKC).toLowerCase(Locale.ROOT);
+        Set<String> identifiers = new HashSet<>();
+        Matcher matcher = ASCII_IDENTIFIER.matcher(normalized);
+        while (matcher.find()) {
+            String identifier = matcher.group();
+            identifiers.add(identifier);
+            // "BM25-based" still names BM25; a query for the full identifier
+            // "SHA-256" must nevertheless match that full identifier.
+            if (identifier.indexOf('-') >= 0) identifiers.addAll(List.of(identifier.split("-")));
+        }
+        Matcher versions = NAMED_VERSION.matcher(normalized);
+        while (versions.find()) {
+            identifiers.add(versions.group(1) + versions.group(2).replaceFirst("^v", ""));
+        }
+        return identifiers;
     }
 
     /** Returns analyzed terms with repetitions retained for document term frequency. */
@@ -162,6 +238,7 @@ public class Bm25Engine {
     public record Hit(String id, double score, double coverage) {
     }
 
-    private record IndexedDocument(String id, Map<String, Integer> frequencies, int length) {
+    private record IndexedDocument(String id, Map<String, Integer> frequencies, int length,
+                                   boolean containsRequiredIdentifiers) {
     }
 }

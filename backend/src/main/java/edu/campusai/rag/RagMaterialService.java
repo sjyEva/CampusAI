@@ -54,15 +54,28 @@ public class RagMaterialService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Material replace(Account account, long courseId, String id, String filename, byte[] content) {
+        return replace(account, courseId, id, filename, content, null);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Material replace(Account account, long courseId, String id, String filename, byte[] content, Integer expectedVersion) {
         access.manage(account, courseId);
         validateUpload(filename, content);
-        return process(repository.stored(courseId, id, true), filename, content);
+        StoredMaterial stored = repository.stored(courseId, id, true);
+        checkVersion(stored, expectedVersion);
+        return process(stored, filename, content);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Material reprocess(Account account, long courseId, String id) {
+        return reprocess(account, courseId, id, null);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Material reprocess(Account account, long courseId, String id, Integer expectedVersion) {
         access.manage(account, courseId);
         StoredMaterial stored = repository.stored(courseId, id, true);
+        checkVersion(stored, expectedVersion);
         return process(stored, stored.filename(), stored.content());
     }
 
@@ -94,8 +107,14 @@ public class RagMaterialService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Material publish(Account account, long courseId, String id, boolean published) {
+        return publish(account, courseId, id, published, null);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Material publish(Account account, long courseId, String id, boolean published, Integer expectedVersion) {
         access.manage(account, courseId);
         StoredMaterial stored = repository.stored(courseId, id, true);
+        checkVersion(stored, expectedVersion);
         if (published && !stored.parseStatus().equals("READY")) {
             throw new RagException(409, "资料解析失败或尚未就绪，不能发布");
         }
@@ -105,19 +124,36 @@ public class RagMaterialService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public void delete(Account account, long courseId, String id) {
+        delete(account, courseId, id, null);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public void delete(Account account, long courseId, String id, Integer expectedVersion) {
         access.manage(account, courseId);
-        repository.stored(courseId, id, true);
+        checkVersion(repository.stored(courseId, id, true), expectedVersion);
         repository.delete(id);
     }
 
     public FileData file(Account account, long courseId, String id) {
+        return file(account, courseId, id, null);
+    }
+
+    public FileData file(Account account, long courseId, String id, Integer expectedVersion) {
         access.read(account, courseId);
         // Read eligibility and bytes together; never resolve a client-supplied filesystem path.
         StoredMaterial material = repository.stored(courseId, id, false);
         if (account.role().equals("student") && (!material.published() || !material.parseStatus().equals("READY"))) {
             throw new RagException(404, "资料不存在或尚未发布");
         }
-        return new FileData(material.filename(), material.content());
+        checkVersion(material, expectedVersion);
+        return new FileData(material.filename(), material.content(), material.version());
+    }
+
+    private static void checkVersion(StoredMaterial material, Integer expectedVersion) {
+        if (expectedVersion != null && expectedVersion < 1) throw new RagException(400, "资料版本必须是正整数");
+        if (expectedVersion != null && material.version() != expectedVersion) {
+            throw new RagException(409, "资料已更新，请刷新并核对新版本后重试");
+        }
     }
 
     private static void validateUpload(String filename, byte[] content) {

@@ -4,6 +4,8 @@
 
 全部题目、原文和标注在第一次运行前固定。验收样例没有由 F 独立标注和保管，因此本文中的 acceptance 只表示预先固定的一组开发者验收样例，不能称为独立盲测。首次结果已经保存在 `baseline-results.json` 和 `baseline-results.md`，后续测试只覆盖 `backend/target/` 中的输出，不自动覆盖这些首轮记录。
 
+本轮增加显式技术标识符检查后的结果另存为 [improvement-results.md](improvement-results.md) 和 [JSON](improvement-results.json)：有依据题仍为 30/30，无依据正确空结果从 6/10 变为 7/10。这是看过首次结果后的已知回归比较，原题目、语料和 baseline 均未更改；规则与召回取舍见 [identifier-improvement.md](identifier-improvement.md)。
+
 ## 复现
 
 在仓库根目录执行：

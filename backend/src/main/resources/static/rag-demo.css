@@ -171,6 +171,13 @@ textarea { width: 100%; resize: vertical; min-height: 125px; max-height: 360px; 
 .answer-status.warning { color: #987338; }
 .answer-text { font-size: 13px; line-height: 1.95; color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
 .answer-reason { font-size: 10px; line-height: 1.8; color: var(--muted); margin-top: 12px; }
+.answer-claims { list-style: none; margin: 0; padding: 0; }
+.answer-claim + .answer-claim { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }
+.claim-text { font-size: 13px; line-height: 1.95; color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.claim-number { margin-left: 7px; color: var(--green); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.claim-quote-label { color: #839176; font-size: 10px; margin-top: 12px; }
+.claim-quote { margin: 7px 0 0; padding: 10px 13px; border-left: 3px solid #c0cf9b; background: #f5f8ee; border-radius: 0 7px 7px 0; font-size: 12px; line-height: 1.9; color: #576c4e; white-space: pre-wrap; overflow-wrap: anywhere; }
+.claim-verify { margin-top: 4px; }
 .sources-heading { display: flex; align-items: center; justify-content: space-between; margin: 22px 2px 12px; }
 .sources-heading h3 { font-size: 13px; font-weight: 600; }
 .sources-heading > span { color: #95a089; font-size: 10px; }
@@ -188,6 +195,7 @@ textarea { width: 100%; resize: vertical; min-height: 125px; max-height: 360px; 
 .source-full p { font-size: 12px; line-height: 2; color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
 .source-full .source-current { font-size: 9px; color: #899777; margin-bottom: 9px; }
 .source-full .source-error { color: var(--red); }
+.source-highlight { background: #e6efb9; color: inherit; border-radius: 3px; padding: 1px 0; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .site-footer { border-top: 1px solid var(--line); display: flex; align-items: center; gap: 21px; padding: 23px 0 30px; font-size: 10px; color: #8e9a85; }
 .site-footer > span:first-child { color: #6f835f; font-weight: 650; letter-spacing: .3px; }
 .footer-label { margin-left: auto; }

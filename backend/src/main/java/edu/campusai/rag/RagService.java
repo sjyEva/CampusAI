@@ -43,6 +43,11 @@ public class RagService {
         return new SearchResult(hits.isEmpty() ? "no_evidence" : "ok", hits);
     }
 
+    public Capabilities capabilities(Account account, long courseId) {
+        access.read(account, courseId);
+        return new Capabilities(model.isConfigured(), Math.max(45, model.timeoutSeconds() + 15));
+    }
+
     public Source source(Account account, long courseId, String chunkId) {
         access.read(account, courseId);
         return repository.source(courseId, chunkId)
@@ -75,7 +80,10 @@ public class RagService {
         }
         Map<String, Source> byId = sources.stream().collect(Collectors.toMap(Source::chunkId, Function.identity()));
         List<Source> citations = generation.citationIds().stream().map(byId::get).toList();
-        return new Answer("generated", generation.answer(), citations, search.hits(), null);
+        List<AnswerClaim> claims = generation.claims().stream().map(claim -> new AnswerClaim(
+                claim.text(), generation.citationIds().indexOf(claim.chunkId()) + 1, claim.chunkId(),
+                claim.quote(), claim.quoteStart(), claim.quoteEnd())).toList();
+        return new Answer("generated", generation.answer(), citations, search.hits(), null, claims);
     }
 
     private static void validateQuestion(String question) {

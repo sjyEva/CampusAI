@@ -90,6 +90,12 @@ class RagGenerationIntegrationTest {
         assertEquals(material, source.path("materialId").asText());
         assertEquals(1, source.path("courseId").asLong());
         assertEquals(TEXT, source.path("text").asText());
+        JsonNode claim = answer.path("claims").get(0);
+        assertNotNull(claim);
+        assertEquals(GENERATED, claim.path("text").asText());
+        assertEquals(1, claim.path("citationNumber").asInt());
+        assertEquals(source.path("chunkId").asText(), claim.path("chunkId").asText());
+        assertEquals(claim.path("quote").asText(), TEXT.substring(claim.path("quoteStart").asInt(), claim.path("quoteEnd").asInt()));
         assertFalse(PROVIDER.lastInput.get().contains("跨课程机密"));
         mvc.perform(get(ROOT + "/sources/" + source.path("chunkId").asText())
                         .header(HttpHeaders.AUTHORIZATION, student))
@@ -111,6 +117,7 @@ class RagGenerationIntegrationTest {
         assertEquals(TEXT, failed.path("evidence").get(0).path("source").path("text").asText());
         assertFalse(failed.toString().contains("test-only-secret"));
         assertFalse(failed.path("answer").asText().contains(GENERATED));
+        assertTrue(failed.path("claims").isEmpty());
     }
 
     @Test

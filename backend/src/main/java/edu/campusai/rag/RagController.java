@@ -36,6 +36,11 @@ public class RagController {
         return ok(materials.list(account(principal), courseId));
     }
 
+    @GetMapping("/capabilities")
+    public ApiResult capabilities(Authentication principal, @PathVariable long courseId) {
+        return ok(rag.capabilities(account(principal), courseId));
+    }
+
     @GetMapping("/materials/{id}")
     public ApiResult detail(Authentication principal, @PathVariable long courseId, @PathVariable String id) {
         return ok(materials.detail(account(principal), courseId, id));
@@ -49,15 +54,17 @@ public class RagController {
     }
 
     @PutMapping(value = "/materials/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResult replace(Authentication principal, @PathVariable long courseId, @PathVariable String id, @RequestParam MultipartFile file) {
+    public ApiResult replace(Authentication principal, @PathVariable long courseId, @PathVariable String id,
+                             @RequestParam MultipartFile file, @RequestParam(required = false) Integer version) {
         Account account = account(principal);
         access.manage(account, courseId);
-        return ok(materials.replace(account, courseId, id, file.getOriginalFilename(), bytes(file)));
+        return ok(materials.replace(account, courseId, id, file.getOriginalFilename(), bytes(file), version));
     }
 
     @PostMapping("/materials/{id}/reprocess")
-    public ApiResult reprocess(Authentication principal, @PathVariable long courseId, @PathVariable String id) {
-        return ok(materials.reprocess(account(principal), courseId, id));
+    public ApiResult reprocess(Authentication principal, @PathVariable long courseId, @PathVariable String id,
+                               @RequestParam(required = false) Integer version) {
+        return ok(materials.reprocess(account(principal), courseId, id, version));
     }
 
     @PatchMapping("/materials/{id}/publication")
@@ -65,21 +72,30 @@ public class RagController {
         if (request == null || request.published() == null || !request.published().isBoolean()) {
             throw new RagException(400, "必须指定 published 布尔值");
         }
-        return ok(materials.publish(account(principal), courseId, id, request.published().booleanValue()));
+        Integer expectedVersion = null;
+        if (request.expectedVersion() != null) {
+            if (!request.expectedVersion().isIntegralNumber() || !request.expectedVersion().canConvertToInt()
+                    || request.expectedVersion().intValue() < 1) throw new RagException(400, "expectedVersion 必须是正整数");
+            expectedVersion = request.expectedVersion().intValue();
+        }
+        return ok(materials.publish(account(principal), courseId, id, request.published().booleanValue(), expectedVersion));
     }
 
     @DeleteMapping("/materials/{id}")
-    public ApiResult delete(Authentication principal, @PathVariable long courseId, @PathVariable String id) {
-        materials.delete(account(principal), courseId, id);
+    public ApiResult delete(Authentication principal, @PathVariable long courseId, @PathVariable String id,
+                            @RequestParam(required = false) Integer version) {
+        materials.delete(account(principal), courseId, id, version);
         return ApiResult.success();
     }
 
     @GetMapping("/materials/{id}/file")
-    public ResponseEntity<byte[]> file(Authentication principal, @PathVariable long courseId, @PathVariable String id) {
-        FileData file = materials.file(account(principal), courseId, id);
+    public ResponseEntity<byte[]> file(Authentication principal, @PathVariable long courseId, @PathVariable String id,
+                                       @RequestParam(required = false) Integer version) {
+        FileData file = materials.file(account(principal), courseId, id, version);
         return ResponseEntity.ok().contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.filename(), StandardCharsets.UTF_8).build().toString())
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .header("X-Material-Version", Integer.toString(file.version()))
                 .header("X-Content-Type-Options", "nosniff").body(file.bytes());
     }
 
@@ -109,6 +125,6 @@ public class RagController {
         try { return file.getBytes(); }
         catch (IOException ex) { throw new RagException(400, "无法读取上传文件，请重试"); }
     }
-    public record Publication(JsonNode published) {}
+    public record Publication(JsonNode published, JsonNode expectedVersion) {}
     public record Question(JsonNode question) {}
 }

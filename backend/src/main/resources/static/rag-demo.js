@@ -14,7 +14,9 @@
   const SESSION_KEY = "campusai.rag-demo.session";
   const state = {
     token: readSession(), user: null, role: null, courses: [], courseId: null,
-    epoch: 0, authEpoch: 0, materialRequestId: 0, busy: false, mutating: false, requests: new Map(), toastTimer: null
+    epoch: 0, authEpoch: 0, materialRequestId: 0, capabilityRequestId: 0,
+    generationConfigured: null, capabilityStatus: "idle", answerTimeoutMs: 75000,
+    busy: false, mutating: false, requests: new Map(), toastTimer: null
   };
   const roleLabels = { teacher: "教师", student: "学生", admin: "管理员" };
   const fallbackReasons = {
@@ -130,6 +132,55 @@
   function canManage() { return state.role === "teacher" || state.role === "admin"; }
   function isAbort(error) { return error.name === "AbortError"; }
 
+  function renderCapabilityMode() {
+    let badge = "等待课程信息";
+    let note = "选择课程后确认问答配置；每次查询会显示实际返回状态。";
+    if (state.capabilityStatus === "loading") {
+      badge = "正在确认配置";
+      note = "正在读取当前课程的问答配置，原文检索仍可使用。";
+    } else if (state.capabilityStatus === "ready") {
+      badge = state.generationConfigured ? "引用问答已配置" : "原文检索模式";
+      note = state.generationConfigured
+        ? "已配置生成服务，实际能否生成以本次请求结果为准。请核对回答的逐字引文。"
+        : "当前未配置生成服务，提问将返回课程原文，便于直接核对来源。";
+    } else if (state.capabilityStatus === "unknown") {
+      badge = "问答配置待确认";
+      note = "暂未确认生成服务配置。你仍可检索原文，提问结果会显示实际状态。";
+    }
+    ui["model-badge"].replaceChildren(element("span", "status-dot"), document.createTextNode(badge));
+    ui["model-note"].textContent = note;
+  }
+
+  async function loadCapabilities() {
+    if (!state.courseId) return;
+    const epoch = state.epoch;
+    const requestId = ++state.capabilityRequestId;
+    state.generationConfigured = null;
+    state.capabilityStatus = "loading";
+    state.answerTimeoutMs = 75000;
+    renderCapabilityMode();
+    try {
+      const result = await api(coursePath("/capabilities"), { timeout: 10000 });
+      if (!current(epoch) || requestId !== state.capabilityRequestId) return;
+      const capabilities = result.data;
+      if (typeof capabilities?.generationConfigured !== "boolean"
+          || !Number.isInteger(capabilities.answerTimeoutSeconds)
+          || capabilities.answerTimeoutSeconds < 45 || capabilities.answerTimeoutSeconds > 75) {
+        throw new ApiError("问答配置信息暂不可用。", 500);
+      }
+      state.generationConfigured = capabilities.generationConfigured;
+      state.answerTimeoutMs = capabilities.answerTimeoutSeconds * 1000;
+      state.capabilityStatus = "ready";
+    } catch (error) {
+      if (!current(epoch) || requestId !== state.capabilityRequestId || isAbort(error)) return;
+      state.generationConfigured = null;
+      state.capabilityStatus = "unknown";
+      state.answerTimeoutMs = 75000;
+    } finally {
+      if (current(epoch) && requestId === state.capabilityRequestId) renderCapabilityMode();
+    }
+  }
+
   function resetAnswer() {
     ui["answer-content"].replaceChildren();
     ui["answer-content"].hidden = true;
@@ -173,6 +224,12 @@
     abortRequests(true);
     setQueryBusy(false);
     resetAnswer();
+    if (state.capabilityStatus === "loading") {
+      state.capabilityStatus = "unknown";
+      state.generationConfigured = null;
+      state.answerTimeoutMs = 75000;
+    }
+    renderCapabilityMode();
   }
 
   function resetSession(reason = "") {
@@ -180,7 +237,8 @@
     state.epoch += 1;
     abortRequests();
     saveSession("");
-    Object.assign(state, { user: null, role: null, courses: [], courseId: null, busy: false, mutating: false });
+    Object.assign(state, { user: null, role: null, courses: [], courseId: null, busy: false, mutating: false,
+      generationConfigured: null, capabilityStatus: "idle", answerTimeoutMs: 75000 });
     document.body.classList.remove("is-authenticated");
     ui["login-panel"].hidden = false;
     ui["workspace"].hidden = true;
@@ -195,6 +253,7 @@
     ui["upload-filename"].textContent = "选择一份课程资料";
     ui.question.value = "";
     resetAnswer();
+    renderCapabilityMode();
     updateQuestionControls();
     message(ui["login-message"], reason);
   }
@@ -265,9 +324,13 @@
     state.epoch += 1;
     abortRequests(true);
     state.courseId = id || null;
+    state.generationConfigured = null;
+    state.capabilityStatus = id ? "loading" : "idle";
+    state.answerTimeoutMs = 75000;
     state.mutating = false;
     setQueryBusy(false);
     resetAnswer();
+    renderCapabilityMode();
     ui.question.value = "";
     ui["upload-file"].value = "";
     ui["upload-filename"].textContent = "选择一份课程资料";
@@ -280,13 +343,13 @@
     ui["materials-empty"].hidden = Boolean(course);
     updateQuestionControls();
     updateMaterialControls();
-    if (course) await loadMaterials();
+    if (course) await Promise.all([loadMaterials(), loadCapabilities()]);
   }
 
   ui["course-select"].addEventListener("change", () => selectCourse(ui["course-select"].value));
   ui["refresh-materials"].addEventListener("click", () => {
     invalidateResults();
-    loadMaterials();
+    Promise.all([loadMaterials(), loadCapabilities()]);
   });
 
   async function loadMaterials() {
@@ -307,8 +370,10 @@
         ? "上传第一份讲义，解析并发布后即可开始检索。"
         : "这门课程暂时没有已发布资料，请等待教师发布。";
       updateMaterialControls();
+      return true;
     } catch (error) {
       if (current(epoch) && requestId === state.materialRequestId && !isAbort(error)) message(ui["materials-message"], error.message);
+      return false;
     } finally {
       if (current(epoch) && requestId === state.materialRequestId) ui["materials-loading"].hidden = true;
     }
@@ -390,7 +455,7 @@
       ui["upload-filename"].textContent = "选择一份课程资料";
       if (result.data.parseStatus === "READY") toast("资料已解析，点击“发布”后即可供学生检索。");
       else toast(`资料已保存，但解析失败：${result.data.errorMessage || "请检查文件后重试。"}`, true);
-      await loadMaterials();
+      await Promise.all([loadMaterials(), loadCapabilities()]);
     } catch (error) {
       if (current(epoch) && !isAbort(error)) toast(error.message, true);
     } finally {
@@ -407,11 +472,12 @@
     invalidateResults();
     const epoch = state.epoch;
     const base = coursePath(`/materials/${encodeURIComponent(material.id)}`);
+    const version = encodeURIComponent(material.version);
     const actions = {
-      publication: { path: `${base}/publication`, method: "PATCH", body: { published: !material.published } },
-      reprocess: { path: `${base}/reprocess`, method: "POST" },
-      replace: { path: base, method: "PUT", body },
-      delete: { path: base, method: "DELETE" }
+      publication: { path: `${base}/publication`, method: "PATCH", body: { published: !material.published, expectedVersion: material.version } },
+      reprocess: { path: `${base}/reprocess?version=${version}`, method: "POST" },
+      replace: { path: `${base}?version=${version}`, method: "PUT", body },
+      delete: { path: `${base}?version=${version}`, method: "DELETE" }
     };
     const request = actions[action];
     state.mutating = true;
@@ -430,9 +496,34 @@
         };
         toast(labels[action]);
       }
-      await loadMaterials();
+      await Promise.all([loadMaterials(), loadCapabilities()]);
     } catch (error) {
-      if (current(epoch) && !isAbort(error)) toast(error.message, true);
+      if (current(epoch) && !isAbort(error)) {
+        if (error.code === 409) await refreshVersionConflict();
+        else toast(error.message, true);
+      }
+    } finally {
+      if (current(epoch)) { state.mutating = false; updateMaterialControls(); }
+    }
+  }
+
+  async function refreshVersionConflict() {
+    // Refresh only reads after a conflict; never replay a publication/update/delete automatically.
+    invalidateResults();
+    const epoch = state.epoch;
+    state.mutating = true;
+    ui["materials-list"].replaceChildren();
+    ui["material-count"].textContent = "—";
+    updateMaterialControls();
+    try {
+      const [materialsLoaded] = await Promise.all([loadMaterials(), loadCapabilities()]);
+      if (current(epoch)) {
+        const hint = materialsLoaded
+          ? "资料版本已变化，列表已重新读取。请核对最新版本后再操作。"
+          : "资料版本已变化，暂未能重新读取列表。请点击刷新，核对最新版本后再操作。";
+        message(ui["materials-message"], hint);
+        toast(hint, true);
+      }
     } finally {
       if (current(epoch)) { state.mutating = false; updateMaterialControls(); }
     }
@@ -444,7 +535,7 @@
       // A result may have been superseded since the last question. Recheck its source first.
       if (chunkId) await api(coursePath(`/sources/${encodeURIComponent(chunkId)}`, courseId));
       const id = material.materialId || material.id;
-      const blob = await api(coursePath(`/materials/${encodeURIComponent(id)}/file`, courseId), { download: true });
+      const blob = await api(coursePath(`/materials/${encodeURIComponent(id)}/file?version=${encodeURIComponent(material.version)}`, courseId), { download: true });
       if (!current(epoch)) return;
       const url = URL.createObjectURL(blob);
       const link = element("a");
@@ -455,7 +546,10 @@
       link.remove();
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (error) {
-      if (current(epoch) && !isAbort(error)) toast(error.message, true);
+      if (current(epoch) && !isAbort(error)) {
+        if (error.code === 409) await refreshVersionConflict();
+        else toast(error.message, true);
+      }
     }
   }
 
@@ -487,7 +581,7 @@
     try {
       const result = mode === "search"
         ? await api(coursePath(`/search?q=${encodeURIComponent(question)}&topK=3`))
-        : await api(coursePath("/ask"), { method: "POST", body: { question } });
+        : await api(coursePath("/ask"), { method: "POST", body: { question }, timeout: state.answerTimeoutMs });
       if (!current(epoch)) return;
       renderAnswer(question, result.data, mode);
     } catch (error) {
@@ -503,13 +597,25 @@
     }
   }
 
-  function updateModelMode(result) {
-    const generated = result.status === "generated";
-    if (!generated && result.status !== "retrieval_only") return;
-    const text = generated ? "引用问答已连接" : "仅返回课程原文";
-    ui["model-badge"].replaceChildren(element("span", "status-dot"), document.createTextNode(text));
-    if (generated) ui["model-note"].textContent = "回答附有资料引用。请展开原文，核对引用内容是否支持回答。";
-    else if (result.status === "retrieval_only") ui["model-note"].textContent = fallbackReasons[result.reason] || "本次只返回课程原文，请直接核对下方来源。";
+  function claimMatchesSource(claim, source) {
+    return claim && source && claim.chunkId === source.chunkId && typeof source.text === "string"
+      && typeof claim.quote === "string" && claim.quote.length > 0
+      && Number.isInteger(claim.quoteStart) && Number.isInteger(claim.quoteEnd)
+      && claim.quoteStart >= 0 && claim.quoteEnd > claim.quoteStart && claim.quoteEnd <= source.text.length
+      && source.text.slice(claim.quoteStart, claim.quoteEnd) === claim.quote;
+  }
+
+  function renderClaim(claim, sourceViews) {
+    const item = element("li", "answer-claim");
+    const sentence = element("p", "claim-text");
+    sentence.append(document.createTextNode(claim.text), element("span", "claim-number", `[${claim.citationNumber}]`));
+    item.append(sentence, element("p", "claim-quote-label", `逐字引文 · 引用 [${claim.citationNumber}]`));
+    item.append(element("blockquote", "claim-quote", claim.quote));
+    item.append(actionButton(`核对引文 [${claim.citationNumber}]`, async () => {
+      const view = sourceViews.get(claim.chunkId);
+      if (view) await view.revealQuote(claim);
+    }, "text-button claim-verify"));
+    return item;
   }
 
   function renderAnswer(question, result, mode) {
@@ -522,6 +628,14 @@
     const status = result.status;
     const evidence = mode === "search" ? result.hits || [] : result.evidence || [];
     const citations = result.citations || [];
+    const sources = new Map(evidence.map((hit) => [hit.source.chunkId, hit.source]));
+    citations.forEach((source) => { if (!sources.has(source.chunkId)) sources.set(source.chunkId, source); });
+    const citationNumbers = new Map(citations.map((source, index) => [source.chunkId, index + 1]));
+    const receivedClaims = Array.isArray(result.claims) ? result.claims : [];
+    const claims = status === "generated" && receivedClaims.every((claim) => claim && typeof claim.text === "string"
+      && claim.text.trim() && claim.citationNumber === citationNumbers.get(claim.chunkId)
+      && claimMatchesSource(claim, sources.get(claim.chunkId))) ? receivedClaims : [];
+    const sourceViews = new Map();
     const labels = {
       generated: "已生成引用回答", retrieval_only: "仅返回课程原文", no_evidence: "暂未找到有效依据",
       sources_changed: "资料已更新，请重新查询", ok: "已找到相关原文"
@@ -533,18 +647,26 @@
         : evidence.length ? "以下是当前课程中与问题相关的原文。展开来源可查看完整片段，也可以下载资料核对。"
           : "未在当前课程已发布资料中找到有效依据。可以补充课程术语，或请教师确认是否已发布相关资料。";
     }
-    summary.append(element("p", "answer-text", answer || "请核对下方原文。"));
+    if (status === "generated" && claims.length) {
+      const claimList = element("ol", "answer-claims");
+      claims.forEach((claim) => claimList.append(renderClaim(claim, sourceViews)));
+      summary.append(claimList, element("p", "answer-reason", "引文已与返回原文逐字核对，仍需检查它是否充分支持这条说明。"));
+    } else {
+      summary.append(element("p", "answer-text", answer || "请核对下方原文。"));
+    }
     if (mode === "ask") {
-      updateModelMode(result);
       if (result.reason && fallbackReasons[result.reason]) summary.append(element("p", "answer-reason", fallbackReasons[result.reason]));
     }
     container.append(summary);
-    if (evidence.length) {
+    if (sources.size) {
       const heading = element("div", "sources-heading");
-      heading.append(element("h3", "", `相关原文 · ${evidence.length}`), element("span", "", "展开来源，核对完整片段"));
+      heading.append(element("h3", "", `相关原文 · ${sources.size}`), element("span", "", "展开来源，核对完整片段"));
       container.append(heading);
-      const citationNumbers = new Map(citations.map((source, index) => [source.chunkId, index + 1]));
-      evidence.forEach((hit, index) => container.append(renderSource(hit.source, index + 1, citationNumbers.get(hit.source.chunkId))));
+      Array.from(sources.values()).forEach((source, index) => {
+        const view = renderSource(source, index + 1, citationNumbers.get(source.chunkId), claims.filter((claim) => claim.chunkId === source.chunkId));
+        sourceViews.set(source.chunkId, view);
+        container.append(view.card);
+      });
     }
     container.hidden = false;
     ui["answer-empty"].hidden = true;
@@ -558,7 +680,35 @@
     return `${position} · v${source.version}${source.heading ? ` · ${source.heading}` : ""}`;
   }
 
-  function renderSource(source, index, citationNumber) {
+  function highlightedSource(source, claims) {
+    const paragraph = element("p");
+    if (!claims.length || !claims.every((claim) => claimMatchesSource(claim, source))) {
+      paragraph.textContent = source.text;
+      return { paragraph, marks: [], valid: claims.length === 0 };
+    }
+    const ranges = claims.map((claim) => ({ start: claim.quoteStart, end: claim.quoteEnd }))
+      .sort((a, b) => a.start - b.start || a.end - b.end);
+    const merged = [];
+    for (const range of ranges) {
+      const previous = merged[merged.length - 1];
+      if (previous && range.start <= previous.end) previous.end = Math.max(previous.end, range.end);
+      else merged.push({ ...range });
+    }
+    let cursor = 0;
+    const marks = [];
+    for (const range of merged) {
+      paragraph.append(document.createTextNode(source.text.slice(cursor, range.start)));
+      const mark = element("mark", "source-highlight", source.text.slice(range.start, range.end));
+      mark.tabIndex = -1;
+      paragraph.append(mark);
+      marks.push({ ...range, node: mark });
+      cursor = range.end;
+    }
+    paragraph.append(document.createTextNode(source.text.slice(cursor)));
+    return { paragraph, marks, valid: true };
+  }
+
+  function renderSource(source, index, citationNumber, claims = []) {
     const epoch = state.epoch;
     const courseId = state.courseId;
     const card = element("article", "source-card card");
@@ -570,46 +720,68 @@
     if (citationNumber) header.append(element("span", "citation-tag", `回答引用 [${citationNumber}]`));
     card.append(header);
     const original = String(source.text || "");
-    const preview = element("p", "source-preview", original.length > 170 ? `${original.slice(0, 170)}…` : original);
+    const previewCharacters = Array.from(original);
+    const preview = element("p", "source-preview", previewCharacters.length > 170 ? `${previewCharacters.slice(0, 170).join("")}…` : original);
     card.append(preview);
     const full = element("div", "source-full");
     full.id = `source-${source.chunkId}`;
     full.hidden = true;
     const actions = element("div", "source-actions");
+    let sourceRequestId = 0;
     const expand = actionButton("展开原文 ↓", async () => {
       if (!full.hidden) {
+        sourceRequestId += 1;
         full.hidden = true;
         expand.textContent = "展开原文 ↓";
         expand.setAttribute("aria-expanded", "false");
         return;
       }
+      await revealQuote();
+    });
+
+    async function revealQuote(focusClaim = null) {
+      const requestId = ++sourceRequestId;
       full.hidden = false;
       full.replaceChildren(element("p", "source-current", "正在核对当前来源…"));
       expand.disabled = true;
       expand.setAttribute("aria-expanded", "true");
       try {
         const result = await api(coursePath(`/sources/${encodeURIComponent(source.chunkId)}`, courseId));
-        if (!current(epoch)) return;
+        if (!current(epoch) || requestId !== sourceRequestId) return;
         const fresh = result.data;
-        full.replaceChildren(element("p", "source-current", `当前来源 · ${sourceLocation(fresh)}`), element("p", "", fresh.text));
+        if (fresh.chunkId !== source.chunkId || fresh.version !== source.version) {
+          throw new ApiError("来源版本已变化，请重新提问后核对。", 409);
+        }
+        const highlighted = highlightedSource(fresh, claims);
+        full.replaceChildren(element("p", "source-current", `当前来源 · ${sourceLocation(fresh)}`), highlighted.paragraph);
+        if (claims.length) full.append(element("p", highlighted.valid ? "source-current" : "source-error", highlighted.valid
+          ? "高亮部分为回答的逐字引文，请结合上下文核对说明。"
+          : "引文与当前来源不一致，未作高亮，请重新提问。"));
         expand.textContent = "收起原文 ↑";
+        if (focusClaim) {
+          const selected = highlighted.marks.find((mark) => mark.start <= focusClaim.quoteStart && mark.end >= focusClaim.quoteEnd);
+          if (selected) {
+            selected.node.scrollIntoView({ block: "nearest" });
+            selected.node.focus({ preventScroll: true });
+          } else full.scrollIntoView({ block: "nearest" });
+        }
       } catch (error) {
-        if (current(epoch) && !isAbort(error)) {
+        if (current(epoch) && requestId === sourceRequestId && !isAbort(error)) {
           full.replaceChildren(element("p", "source-error", error.message));
-          if (error.code === 404 || error.code === 403) {
+          if (error.code === 404 || error.code === 403 || error.code === 409) {
             preview.textContent = "这条来源已更新或不可访问，请重新检索。";
             download.disabled = true;
           }
           expand.textContent = "收起提示 ↑";
         }
-      } finally { if (current(epoch)) expand.disabled = false; }
-    });
+      } finally { if (current(epoch) && requestId === sourceRequestId) expand.disabled = false; }
+    }
     expand.setAttribute("aria-expanded", "false");
     expand.setAttribute("aria-controls", full.id);
     const download = actionButton("下载资料 ↗", () => downloadFile(source, courseId, source.chunkId));
     actions.append(expand, download);
     card.append(actions, full);
-    return card;
+    return { card, revealQuote };
   }
 
   if (state.token) {

@@ -24,7 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.datasource.url=jdbc:h2:mem:campusai_rag_api;MODE=MySQL;DB_CLOSE_DELAY=-1",
         "spring.datasource.username=sa", "spring.datasource.password=",
         "campusai.dev-password=CampusTest-Password",
-        "campusai.rag.model.base-url=", "campusai.rag.model.name=", "campusai.rag.model.api-key="
+        "campusai.rag.model.base-url=", "campusai.rag.model.name=", "campusai.rag.model.api-key=",
+        "campusai.rag.model.timeout-seconds=60"
 })
 @AutoConfigureMockMvc
 class RagApiTest {
@@ -165,6 +166,50 @@ class RagApiTest {
             check(post(BASE + "/ask").contentType(MediaType.APPLICATION_JSON)
                     .content("{\"question\":" + invalid + "}"), student, 400);
         }
+    }
+
+    @Test
+    void pinnedDownloadsAndOldManagementActionsCannotUseUnseenNewContent() throws Exception {
+        String id = upload("lesson.txt", TEXT.getBytes(StandardCharsets.UTF_8)).path("id").asText();
+        publish(id, true);
+        mvc.perform(get(BASE + "/materials/" + id + "/file").param("version", "1")
+                .header(HttpHeaders.AUTHORIZATION, student))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Material-Version", "1"));
+        MockMultipartFile replacement = new MockMultipartFile("file", "lesson.txt", "text/plain",
+                "软件测试通过执行程序发现缺陷。".getBytes(StandardCharsets.UTF_8));
+        JsonNode updated = data(multipart(BASE + "/materials/" + id).file(replacement).param("version", "1")
+                .with(request -> { request.setMethod("PUT"); return request; }), teacher);
+        assertEquals(2, updated.path("version").asInt());
+        check(patch(BASE + "/materials/" + id + "/publication").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"published\":true,\"expectedVersion\":1}"), teacher, 409);
+        check(delete(BASE + "/materials/" + id).param("version", "1"), teacher, 409);
+        check(post(BASE + "/materials/" + id + "/reprocess").param("version", "1"), teacher, 409);
+        check(multipart(BASE + "/materials/" + id).file(replacement).param("version", "1")
+                .with(request -> { request.setMethod("PUT"); return request; }), teacher, 409);
+        assertFalse(data(get(BASE + "/materials/" + id), teacher).path("published").asBoolean());
+        data(patch(BASE + "/materials/" + id + "/publication").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"published\":true,\"expectedVersion\":2}"), teacher);
+        check(get(BASE + "/materials/" + id + "/file").param("version", "1"), student, 409);
+        byte[] downloaded = mvc.perform(get(BASE + "/materials/" + id + "/file").param("version", "2")
+                .header(HttpHeaders.AUTHORIZATION, student)).andReturn().getResponse().getContentAsByteArray();
+        assertArrayEquals(replacement.getBytes(), downloaded);
+        check(get(BASE + "/materials/" + id + "/file").param("version", "0"), student, 400);
+        check(get(BASE + "/materials/" + id + "/file").param("version", "1"), login("student2"), 404);
+        for (String invalid : new String[] {"0", "-1", "1.5", "\"2\"", "true", "null", "2147483648"}) {
+            check(patch(BASE + "/materials/" + id + "/publication").contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"published\":false,\"expectedVersion\":" + invalid + "}"), teacher, 400);
+        }
+        assertTrue(data(get(BASE + "/materials/" + id), teacher).path("published").asBoolean());
+    }
+
+    @Test
+    void capabilitiesRespectCourseScopeAndAllowTimeForTheLongestModelRequest() throws Exception {
+        JsonNode capabilities = data(get(BASE + "/capabilities"), student);
+        assertFalse(capabilities.path("generationConfigured").asBoolean());
+        assertEquals(75, capabilities.path("answerTimeoutSeconds").asInt());
+        assertEquals(2, capabilities.size());
+        check(get(BASE + "/capabilities"), login("student2"), 404);
+        check(get(BASE + "/capabilities"), "Bearer invalid", 401);
     }
 
     private JsonNode upload(String name, byte[] bytes) throws Exception {

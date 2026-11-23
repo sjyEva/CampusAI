@@ -60,6 +60,10 @@ class ModelGatewayTest {
         assertEquals("generated", result.reason());
         assertEquals(List.of(B, A), result.citationIds());
         assertEquals("提供直接的传播路径。 [1]\n\n有助于训练深层网络。 [2]\n\n恒等映射连接层间表示。 [1]", result.answer());
+        assertEquals(3, result.claims().size());
+        assertEquals(List.of(B, A, B), result.claims().stream().map(ModelGateway.GroundedClaim::chunkId).toList());
+        assertEquals("为梯度传播提供直接路径", result.claims().get(0).quote());
+        assertEquals("提供直接的传播路径。", result.claims().get(0).text());
         JsonNode request = json.readTree(capturedBody.get());
         assertEquals("test-model", request.path("model").asText());
         assertFalse(request.path("stream").asBoolean());
@@ -93,6 +97,68 @@ class ModelGatewayTest {
         assertFallback(ask(), "invalid_citation");
         replaceReply(200, completion(List.of(claim("声称有依据", A, "残差"))));
         assertFallback(ask(), "invalid_citation");
+    }
+
+    @Test
+    void exposesExactUnicodeQuoteOffsetsAndUsesFirstOccurrenceWithoutRewritingSource() throws Exception {
+        String source = "😀引言：残差连接提供路径。后文再次说明：残差连接提供路径。";
+        String quote = "残差连接提供路径";
+        reply(200, completion(List.of(claim("  连接提供路径。  ", A, quote))));
+        ModelGateway.Generation result = gateway(2).generate("连接的作用？",
+                List.of(new ModelGateway.ModelEvidence(A, source)));
+        assertTrue(result.generated());
+        ModelGateway.GroundedClaim support = result.claims().get(0);
+        assertEquals("连接提供路径。", support.text());
+        // One emoji occupies two UTF-16 units, then three ordinary Chinese/punctuation characters.
+        assertEquals(5, support.quoteStart());
+        assertEquals(13, support.quoteEnd());
+        assertEquals(quote, source.substring(support.quoteStart(), support.quoteEnd()));
+        assertTrue(source.substring(support.quoteEnd()).contains(quote), "Repeated text must not move the offset to the last occurrence");
+        assertThrows(UnsupportedOperationException.class, () -> result.claims().clear());
+        assertThrows(UnsupportedOperationException.class, () -> result.citationIds().clear());
+    }
+
+    @Test
+    void preservesAWholeSupplementaryCharacterInsideTheQuote() throws Exception {
+        String source = "位置：😀甲乙丙。";
+        String quote = "😀甲乙丙";
+        reply(200, completion(List.of(claim("引用包括完整的补充平面字符。", A, quote))));
+        ModelGateway.Generation result = gateway(2).generate("内容？",
+                List.of(new ModelGateway.ModelEvidence(A, source)));
+        assertTrue(result.generated());
+        ModelGateway.GroundedClaim support = result.claims().get(0);
+        assertEquals(3, support.quoteStart());
+        assertEquals(8, support.quoteEnd());
+        assertEquals(quote, source.substring(support.quoteStart(), support.quoteEnd()));
+    }
+
+    @Test
+    void rejectsQuotesThatOnlyReachFourUtf16UnitsOrSplitASurrogatePair() throws Exception {
+        String source = "😀😁甲乙丙丁戊";
+        reply(200, completion(List.of(claim("两个表情不算四个完整字符。", A, "😀😁"))));
+        assertFallback(gateway(2).generate("内容？", List.of(new ModelGateway.ModelEvidence(A, source))), "invalid_citation");
+
+        // A malformed escaped low surrogate can otherwise match the second half of 😁.
+        String halfStart = "{\"claims\":[{\"text\":\"不能从半个字符开始定位。\",\"chunkId\":\"chunk-a\",\"quote\":\""
+                + '\\' + "uDE01甲乙丙丁\"}]}";
+        replaceReply(200, envelope(halfStart, "stop"));
+        assertFallback(gateway(2).generate("内容？", List.of(new ModelGateway.ModelEvidence(A, source))), "invalid_citation");
+
+        String suffixSource = "甲乙丙丁😀";
+        String halfEnd = "{\"claims\":[{\"text\":\"不能在半个字符处结束定位。\",\"chunkId\":\"chunk-a\",\"quote\":\"甲乙丙丁"
+                + '\\' + "uD83D\"}]}";
+        replaceReply(200, envelope(halfEnd, "stop"));
+        assertFallback(gateway(2).generate("内容？", List.of(new ModelGateway.ModelEvidence(A, suffixSource))), "invalid_citation");
+    }
+
+    @Test
+    void neverReturnsPartialValidatedQuotesWhenALaterClaimUsesAForeignSource() throws Exception {
+        reply(200, completion(List.of(
+                claim("第一条拥有真实引文。", A, "通过恒等映射"),
+                claim("第二条试图使用另一课程资料。", "foreign-id", "通过恒等映射"))));
+        ModelGateway.Generation result = ask();
+        assertFallback(result, "invalid_citation");
+        assertTrue(result.claims().isEmpty());
     }
 
     @Test
@@ -219,6 +285,17 @@ class ModelGatewayTest {
         assertDoesNotThrow(() -> new ModelGateway("https://example.com/v1/", "", "m", 2, json));
     }
 
+    @Test
+    void exposesConfigurationCapabilityWithoutAProviderRequestOrCredentialFields() {
+        reply(500, "should not be requested");
+        assertFalse(new ModelGateway("", "test-key", "test-model", 7, json).isConfigured());
+        assertFalse(new ModelGateway(baseUrl, "test-key", "", 7, json).isConfigured());
+        ModelGateway configured = new ModelGateway(baseUrl, "", "local-model", 60, json);
+        assertTrue(configured.isConfigured());
+        assertEquals(60, configured.timeoutSeconds());
+        assertEquals(0, requests.get());
+    }
+
     private ModelGateway gateway(int seconds) {
         return new ModelGateway(baseUrl, "test-key", "test-model", seconds, json);
     }
@@ -280,5 +357,6 @@ class ModelGatewayTest {
         assertEquals(reason, result.reason());
         assertTrue(result.answer().isEmpty());
         assertTrue(result.citationIds().isEmpty());
+        assertTrue(result.claims().isEmpty());
     }
 }

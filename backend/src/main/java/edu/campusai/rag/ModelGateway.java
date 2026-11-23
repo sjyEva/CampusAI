@@ -86,7 +86,7 @@ public class ModelGateway {
         if (evidence.size() > 10 || characters > 30000) {
             return fallback("invalid_request");
         }
-        if (endpoint == null || model.isBlank()) {
+        if (!isConfigured()) {
             return fallback("unconfigured");
         }
 
@@ -132,6 +132,15 @@ public class ModelGateway {
         }
     }
 
+    /** Reports availability of configuration only, without making a provider request. */
+    public boolean isConfigured() {
+        return endpoint != null && !model.isBlank();
+    }
+
+    public int timeoutSeconds() {
+        return timeoutSeconds;
+    }
+
     private Generation validate(byte[] response, Map<String, String> allowed) {
         try {
             JsonNode envelope = json.reader().with(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
@@ -156,6 +165,7 @@ public class ModelGateway {
             }
             List<String> ids = new ArrayList<>();
             List<String> sentences = new ArrayList<>();
+            List<GroundedClaim> claims = new ArrayList<>();
             for (JsonNode claim : payload.path("claims")) {
                 if (!claim.isObject() || claim.size() != 3 || !claim.path("text").isTextual()
                         || !claim.path("chunkId").isTextual() || !claim.path("quote").isTextual()) {
@@ -165,7 +175,12 @@ public class ModelGateway {
                 String quote = claim.path("quote").asText();
                 String text = claim.path("text").asText().strip();
                 String source = allowed.get(id);
-                if (source == null || quote.strip().length() < 4 || !source.contains(quote)) {
+                String strippedQuote = quote.strip();
+                int quoteStart = source == null ? -1 : source.indexOf(quote);
+                int quoteEnd = quoteStart + quote.length();
+                if (source == null || strippedQuote.codePointCount(0, strippedQuote.length()) < 4
+                        || quoteStart < 0 || !isCodePointBoundary(source, quoteStart)
+                        || !isCodePointBoundary(source, quoteEnd)) {
                     return fallback("invalid_citation");
                 }
                 if (text.isBlank() || text.length() > 1200 || text.matches("(?s).*[\\[\\]【】<>].*")
@@ -174,15 +189,23 @@ public class ModelGateway {
                 }
                 if (!ids.contains(id)) ids.add(id);
                 sentences.add(text + " [" + (ids.indexOf(id) + 1) + "]");
+                claims.add(new GroundedClaim(text, id, quote, quoteStart, quoteEnd));
             }
-            return new Generation(true, String.join("\n\n", sentences), List.copyOf(ids), "generated");
+            return new Generation(true, String.join("\n\n", sentences), ids, "generated", claims);
         } catch (Exception exception) {
             return fallback("invalid_response");
         }
     }
 
     private static Generation fallback(String reason) {
-        return new Generation(false, "", List.of(), reason);
+        return new Generation(false, "", List.of(), reason, List.of());
+    }
+
+    private static boolean isCodePointBoundary(String text, int offset) {
+        return offset >= 0 && offset <= text.length()
+                && !(offset > 0 && offset < text.length()
+                && Character.isHighSurrogate(text.charAt(offset - 1))
+                && Character.isLowSurrogate(text.charAt(offset)));
     }
 
     private static URI endpoint(String baseUrl) {
@@ -205,7 +228,20 @@ public class ModelGateway {
 
     public record ModelEvidence(String id, String text) {}
 
-    public record Generation(boolean generated, String answer, List<String> citationIds, String reason) {}
+    /** Offsets address the exact supplied source text using Java/JavaScript UTF-16 indices. */
+    public record GroundedClaim(String text, String chunkId, String quote, int quoteStart, int quoteEnd) {}
+
+    public record Generation(boolean generated, String answer, List<String> citationIds, String reason,
+                             List<GroundedClaim> claims) {
+        public Generation {
+            citationIds = List.copyOf(citationIds);
+            claims = List.copyOf(claims);
+        }
+
+        public Generation(boolean generated, String answer, List<String> citationIds, String reason) {
+            this(generated, answer, citationIds, reason, List.of());
+        }
+    }
 
     private static final class LimitedBodySubscriber implements HttpResponse.BodySubscriber<byte[]> {
         private final int limit;

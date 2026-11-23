@@ -6,19 +6,24 @@
 
 | 方法/相对路径 | 输入 | 返回 data / 权限 |
 | --- | --- | --- |
+| `GET /capabilities` | 无 | 当前课程授权下的模型配置状态、问答等待上限；不返回密钥/模型名/服务地址 |
 | `GET /materials` | 无 | 资料数组；学生只见 READY 且已发布资料，管理者见全部 |
 | `GET /materials/{id}` | 无 | 资料状态；同上 |
 | `POST /materials` | multipart `file` | 新建并同步解析；仅负责课程的教师/管理员 |
-| `PUT /materials/{id}` | multipart `file` | 替换内容；变更后须重新发布；仅管理者 |
-| `POST /materials/{id}/reprocess` | 无 | 重处理保存的文件；同内容成功状态幂等；仅管理者 |
-| `PATCH /materials/{id}/publication` | `{"published":true}` 或 `false`，严格布尔值 | 发布/下架后资料状态；仅管理者 |
-| `DELETE /materials/{id}` | 无 | 删除资料与片段；仅管理者 |
-| `GET /materials/{id}/file` | 无 | 授权下载，`Cache-Control: no-store`；学生只能下载当前已发布资料 |
+| `PUT /materials/{id}` | multipart `file`；query `version` | 替换内容；变更后须重新发布；仅管理者 |
+| `POST /materials/{id}/reprocess` | query `version` | 重处理保存的文件；同内容成功状态幂等；仅管理者 |
+| `PATCH /materials/{id}/publication` | `{"published":true,"expectedVersion":1}`，严格布尔值和正整数 | 发布/下架后资料状态；仅管理者 |
+| `DELETE /materials/{id}` | query `version` | 删除资料与片段；仅管理者 |
+| `GET /materials/{id}/file` | query `version` | 授权下载，`Cache-Control: no-store`、`X-Material-Version`；学生只能下载当前已发布资料 |
 | `GET /search?q=...&topK=3` | q 非空、最多 500 字符；topK 1–10 | `SearchResult` |
 | `GET /sources/{chunkId}` | 无 | 当前可见来源；失效、越权、旧版本均 code404 |
 | `POST /ask` | `{"question":"残差连接有什么作用？"}`，严格字符串 | `Answer` |
 
 `courseId` 使用当前课程表的数值 ID；`materialId/chunkId` 是不透明 UUID 字符串，不能猜测文件路径。即使 UUID 正确，也不能通过另一课程入口读取。
+
+资料列表或引用显示 v1 时，写操作和下载应传对应的 `version=1`；发布/下架通过 JSON 的 `expectedVersion` 传入。锁行后的当前版本不符返回 `code=409`，调用方刷新资料并让用户核对，不能自动重试写操作。版本字段为兼容旧客户端可省略；省略仍按当前版本执行，**不具备防止旧页面误操作的保护**。演示页已对所有这些操作传版本。下载在一次查询取得的状态、版本和文件字节上校验，避免旧引用跳到新文件；不保存历史文件版本。
+
+能力示例：`{"generationConfigured":false,"answerTimeoutSeconds":45}`。`generationConfigured=true` 只表示已填入模型地址及名称，不证明服务健康。问答前端超时使用 `answerTimeoutSeconds`（至少 45 秒，模型上限加 15 秒余量，最大 75 秒）；能力读取失败可使用 75 秒及中性状态，不应把服务状态误写成未配置。普通查询和上传保留各自等待上限。
 
 ## 数据结构
 
@@ -66,11 +71,14 @@ PDF 只有 `pageNumber`；DOCX/TXT 的 `pageNumber=null`，使用从 1 开始的
   "answer": "本次未生成回答，请查看下方相关原文并核对来源。",
   "citations": [],
   "evidence": [],
-  "reason": "unconfigured"
+  "reason": "unconfigured",
+  "claims": []
 }
 ```
 
 上述是字段结构示例，实际回退响应的 `evidence` 包含真实 `SearchHit`。`generated` 时 `answer` 内的 `[1]` 对应 `citations[0]`，引用只由服务端从本次候选映射；前端必须按纯文本显示回答和原文，不能直接插入 HTML。
+
+`generated` 还返回逐条声明 `claims`，各项为 `{"text":"说明正文","citationNumber":1,"chunkId":"片段UUID","quote":"经校验的逐字引文","quoteStart":0,"quoteEnd":8}`。索引是原片段 `text` 的 UTF-16 左闭右开范围，Java 的 `substring` 和 JavaScript 的 `slice` 可直接核对；不是页内字符坐标。重复引文定位到第一次出现，不拆开 Unicode 代理对。引文至少四个 Unicode 码点，任一声明不合法时整次回退，所有 `claims` 为空。前端展示每条说明与引文，展开来源时重新授权并核对 `fresh.text.slice(quoteStart,quoteEnd)===quote` 后才高亮。引文可核对仍不代表说明获得语义支持。
 
 | status | 含义与界面行为 |
 | --- | --- |

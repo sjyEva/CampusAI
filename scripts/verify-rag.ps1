@@ -11,7 +11,7 @@ $cleanupFailure = $null
 
 function Invoke-RagApi {
     param([string]$Path, [string]$Token, [string]$Method = 'GET', [object]$Body, [object]$Form)
-    $request = @{ Uri="$base$Path"; Method=$Method; TimeoutSec=70 }
+    $request = @{ Uri="$base$Path"; Method=$Method; TimeoutSec=90 }
     if ($Token) { $request.Headers = @{Authorization="Bearer $Token"} }
     if ($null -ne $Body) {
         $request.ContentType = 'application/json; charset=utf-8'
@@ -34,6 +34,9 @@ try {
     $student = Login 'student'
     $other = Login 'student2'
     $prefix = '/campusai/courses/1/rag'
+    $capabilities = Invoke-RagApi -Path "$prefix/capabilities" -Token $student
+    Assert-Code $capabilities
+    if ($capabilities.data.answerTimeoutSeconds -lt 45 -or $capabilities.data.answerTimeoutSeconds -gt 75) { throw '问答等待上限不符。' }
     [IO.File]::WriteAllText($tempFile, "$marker 验证资料：残差连接提供信息和梯度的传播路径。", [Text.UTF8Encoding]::new($false))
     $uploaded = Invoke-RagApi -Path "$prefix/materials" -Token $teacher -Method POST -Form @{file=Get-Item -LiteralPath $tempFile}
     Assert-Code $uploaded
@@ -43,7 +46,7 @@ try {
     $draft = Invoke-RagApi -Path "$prefix/search?q=$query" -Token $student
     Assert-Code $draft
     if ($draft.data.hits.Count -ne 0) { throw '草稿不应被学生检索。' }
-    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$true})
+    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$true;expectedVersion=1})
     $found = Invoke-RagApi -Path "$prefix/search?q=$query" -Token $student
     Assert-Code $found
     $source = @($found.data.hits | Where-Object { $_.source.materialId -eq $createdId })[0].source
@@ -52,20 +55,23 @@ try {
     Assert-Code (Invoke-RagApi -Path "$prefix/search?q=$query" -Token $other) 404
     Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/file" -Token $other) 404
     Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId" -Token $student -Method DELETE) 403
-    $retry = Invoke-RagApi -Path "$prefix/materials/$createdId/reprocess" -Token $teacher -Method POST
+    $retry = Invoke-RagApi -Path "$prefix/materials/$createdId/reprocess?version=1" -Token $teacher -Method POST
     Assert-Code $retry
     if ($retry.data.version -ne 1 -or -not $retry.data.published) { throw '成功后的重复处理不应改版本或重复片段。' }
     $answer = Invoke-RagApi -Path "$prefix/ask" -Token $student -Method POST -Body @{question=$marker}
     Assert-Code $answer
     if ($answer.data.status -notin @('generated','retrieval_only','no_evidence')) { throw '问答没有返回明确状态。' }
     Write-Host "PASS 真实上传、发布、检索、来源、问答（$($answer.data.status)）及课程权限"
-    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$false})
+    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$false;expectedVersion=1})
     Assert-Code (Invoke-RagApi -Path "$prefix/sources/$($source.chunkId)" -Token $student) 404
     [IO.File]::WriteAllText($tempFile, 'replacementmarker 软件测试发现缺陷。', [Text.UTF8Encoding]::new($false))
-    $replacement = Invoke-RagApi -Path "$prefix/materials/$createdId" -Token $teacher -Method PUT -Form @{file=Get-Item -LiteralPath $tempFile}
+    $replacement = Invoke-RagApi -Path "$prefix/materials/${createdId}?version=1" -Token $teacher -Method PUT -Form @{file=Get-Item -LiteralPath $tempFile}
     Assert-Code $replacement
     if ($replacement.data.version -ne 2 -or $replacement.data.published) { throw '更新必须产生未发布的新版本。' }
     Assert-Code (Invoke-RagApi -Path "$prefix/sources/$($source.chunkId)" -Token $student) 404
+    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$true;expectedVersion=1}) 409
+    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/publication" -Token $teacher -Method PATCH -Body @{published=$true;expectedVersion=2})
+    Assert-Code (Invoke-RagApi -Path "$prefix/materials/$createdId/file?version=1" -Token $student) 409
     Write-Host 'PASS 幂等重处理、下架失效、替换新版本和旧引用失效'
     $verificationSucceeded = $true
 } finally {

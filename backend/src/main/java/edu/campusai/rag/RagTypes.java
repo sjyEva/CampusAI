@@ -14,7 +14,14 @@ public final class RagTypes {
 
     public record SearchHit(Source source, double score, double coverage) {}
     public record SearchResult(String status, List<SearchHit> hits) {}
+    public record AnswerClaim(String text, int citationNumber, String chunkId, String quote,
+                              int quoteStart, int quoteEnd) {}
     public record Answer(String status, String answer, List<Source> citations,
-                         List<SearchHit> evidence, String reason) {}
-    public record FileData(String filename, byte[] bytes) {}
+                         List<SearchHit> evidence, String reason, List<AnswerClaim> claims) {
+        public Answer(String status, String answer, List<Source> citations, List<SearchHit> evidence, String reason) {
+            this(status, answer, citations, evidence, reason, List.of());
+        }
+    }
+    public record Capabilities(boolean generationConfigured, int answerTimeoutSeconds) {}
+    public record FileData(String filename, byte[] bytes, int version) {}
 }
