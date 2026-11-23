@@ -6,8 +6,9 @@ import DocsView from './views/DocsView.vue'
 import LoginView from './views/LoginView.vue'
 import OverviewView from './views/OverviewView.vue'
 import QaView from './views/QaView.vue'
-import StatsView from './views/StatsView.vue'
 import QuizView from './views/QuizView.vue'
+import StatsView from './views/StatsView.vue'
+import UsersView from './views/UsersView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
@@ -25,6 +26,7 @@ const router = createRouter({
         { path: 'quiz', name: 'quiz', component: QuizView },
         { path: 'qa', name: 'qa', component: QaView },
         { path: 'stats', name: 'stats', component: StatsView },
+        { path: 'users', name: 'users', component: UsersView, meta: { admin: true } },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'overview' } },
