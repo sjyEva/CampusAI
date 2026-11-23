@@ -2,6 +2,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import AdminLayout from './layouts/AdminLayout.vue'
 import { profile, restoreSession } from './session.js'
 import CoursesView from './views/CoursesView.vue'
+import DocsView from './views/DocsView.vue'
 import LoginView from './views/LoginView.vue'
 import OverviewView from './views/OverviewView.vue'
 
@@ -17,6 +18,7 @@ const router = createRouter({
         { path: '', redirect: { name: 'overview' } },
         { path: 'overview', name: 'overview', component: OverviewView },
         { path: 'courses', name: 'courses', component: CoursesView },
+        { path: 'docs', name: 'docs', component: DocsView },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'overview' } },
