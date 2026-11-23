@@ -5,6 +5,7 @@ import CoursesView from './views/CoursesView.vue'
 import DocsView from './views/DocsView.vue'
 import LoginView from './views/LoginView.vue'
 import OverviewView from './views/OverviewView.vue'
+import QaView from './views/QaView.vue'
 import QuizView from './views/QuizView.vue'
 
 const router = createRouter({
@@ -21,6 +22,7 @@ const router = createRouter({
         { path: 'courses', name: 'courses', component: CoursesView },
         { path: 'docs', name: 'docs', component: DocsView },
         { path: 'quiz', name: 'quiz', component: QuizView },
+        { path: 'qa', name: 'qa', component: QaView },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'overview' } },
