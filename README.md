@@ -12,7 +12,7 @@
 
 项目处于第一周基础工程阶段，已建立后端、管理后台和学生小程序工程。基础链路包括登录、角色验证、课程列表、课程详情和退出登录。管理后台已通过构建，学生端平台构建与真实浏览器联调受当前执行环境限制，验证记录见运行说明。完整功能以六周计划为准。
 
-E 的解析、BM25 检索和引用问答模块现已提供真实后端接口、独立演示页及固定开发评估。支持文本型 PDF、DOCX、TXT，按课程和资料版本隔离来源；增加技术标识符核对、逐条引文位置和旧版本操作保护，未配置模型时返回检索原文。[模块运行与交接说明](docs/rag/README.md)、[接口约定](docs/rag/api.md)、[评估与改进对照](docs/rag/evaluation/README.md)。正式两端接入、问答历史和真实模型验证仍需按团队计划完成。
+E 的解析、BM25 检索和引用问答模块现已提供真实后端接口、独立演示页及固定开发评估。支持文本型 PDF、DOCX、TXT，按课程和资料版本隔离来源；增加技术标识符核对、逐条引文位置和旧版本操作保护，未配置模型时返回检索原文。已完成真实 DeepSeek 问答及公网 HTTPS 联调，密钥由运行后端的负责人私有配置，仓库不包含个人凭据。[模块运行与交接说明](docs/rag/README.md)、[接口约定](docs/rag/api.md)、[评估与改进对照](docs/rag/evaluation/README.md)、[私有配置与公网联调](docs/rag/deployment.md)。正式两端接入、问答历史和独立模型质量评估仍需按团队计划完成。
 
 ### 计划功能
 
@@ -85,7 +85,7 @@ Campus AI Course Assistant is a course learning support system for students at o
 
 The week-one scaffold contains a backend, an administration web app, and a student mini-program with an H5 development entry. It connects sign-in, roles, course listing, course details, and sign-out. The admin production build passed. Student platform builds and live browser integration require an environment with the required network and runtime access. See the setup guide for verification records.
 
-The parsing/BM25/citation-RAG module now exposes real protected APIs and a standalone demo at `/rag-demo.html`. It supports text PDF, DOCX and UTF-8 TXT, authoritative course/publication/version filtering, and explicit retrieval fallback when no model is configured. See [module documentation](docs/rag/README.md) and [developer-authored evaluation](docs/rag/evaluation/README.md). Full client integration, history and real-provider validation remain team follow-up work.
+The parsing/BM25/citation-RAG module now exposes real protected APIs and a standalone demo at `/rag-demo.html`. It supports text PDF, DOCX and UTF-8 TXT, authoritative course/publication/version filtering, and explicit retrieval fallback when no model is configured. Real DeepSeek generation and public HTTPS access have been verified with private backend credentials; no personal credentials are included in the repository. See [module documentation](docs/rag/README.md), [developer-authored evaluation](docs/rag/evaluation/README.md), and [private deployment setup](docs/rag/deployment.md). Full client integration, history and independent model-quality evaluation remain team follow-up work.
 
 ### Planned Features
 

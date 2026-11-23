@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -43,14 +44,23 @@ public class ModelGateway {
     private final String apiKey;
     private final String model;
     private final int timeoutSeconds;
+    private final boolean jsonMode;
+    private final boolean disableThinking;
     private final ObjectMapper json;
     private final HttpClient client;
 
+    public ModelGateway(String baseUrl, String apiKey, String model, int timeoutSeconds, ObjectMapper json) {
+        this(baseUrl, apiKey, model, timeoutSeconds, false, false, json);
+    }
+
+    @Autowired
     public ModelGateway(
             @Value("${campusai.rag.model.base-url:}") String baseUrl,
             @Value("${campusai.rag.model.api-key:}") String apiKey,
             @Value("${campusai.rag.model.name:}") String model,
             @Value("${campusai.rag.model.timeout-seconds:10}") int timeoutSeconds,
+            @Value("${campusai.rag.model.json-mode:false}") boolean jsonMode,
+            @Value("${campusai.rag.model.disable-thinking:false}") boolean disableThinking,
             ObjectMapper json) {
         this.endpoint = endpoint(baseUrl);
         this.apiKey = apiKey == null ? "" : apiKey.strip();
@@ -59,6 +69,8 @@ public class ModelGateway {
             throw new IllegalArgumentException("Model timeout must be between 1 and 60 seconds");
         }
         this.timeoutSeconds = timeoutSeconds;
+        this.jsonMode = jsonMode;
+        this.disableThinking = disableThinking;
         this.json = json;
         this.client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(Math.min(5, timeoutSeconds)))
@@ -93,7 +105,7 @@ public class ModelGateway {
         CompletableFuture<HttpResponse<byte[]>> request = null;
         try {
             String userData = json.writeValueAsString(Map.of("question", question, "evidence", evidence));
-            byte[] body = json.writeValueAsBytes(Map.of(
+            Map<String, Object> payload = new LinkedHashMap<>(Map.of(
                     "model", model,
                     "stream", false,
                     "temperature", 0,
@@ -101,6 +113,13 @@ public class ModelGateway {
                     "messages", List.of(
                             Map.of("role", "system", "content", SYSTEM_PROMPT),
                             Map.of("role", "user", "content", userData))));
+            if (jsonMode) {
+                payload.put("response_format", Map.of("type", "json_object"));
+            }
+            if (disableThinking) {
+                payload.put("thinking", Map.of("type", "disabled"));
+            }
+            byte[] body = json.writeValueAsBytes(payload);
             HttpRequest.Builder builder = HttpRequest.newBuilder(endpoint)
                     .timeout(Duration.ofSeconds(timeoutSeconds))
                     .header("Content-Type", "application/json")

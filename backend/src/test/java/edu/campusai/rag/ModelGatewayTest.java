@@ -67,10 +67,46 @@ class ModelGatewayTest {
         JsonNode request = json.readTree(capturedBody.get());
         assertEquals("test-model", request.path("model").asText());
         assertFalse(request.path("stream").asBoolean());
+        assertFalse(request.has("response_format"));
+        assertFalse(request.has("thinking"));
         assertEquals("Bearer test-key", capturedAuthorization.get());
         JsonNode input = json.readTree(request.path("messages").get(1).path("content").asText());
         assertEquals(2, input.path("evidence").size());
         assertEquals(ORIGINAL, input.path("evidence").get(0).path("text").asText());
+    }
+
+    @Test
+    void enablesJsonOutputAndDisablesThinkingIndependentlyAtTheRequestTopLevel() throws Exception {
+        reply(200, completion(List.of(claim("有助于训练深层网络。", A, "帮助训练深层网络"))));
+        for (boolean jsonMode : List.of(false, true)) {
+            for (boolean disableThinking : List.of(false, true)) {
+                ModelGateway gateway = new ModelGateway(baseUrl, "test-key", "deepseek-flash", 2,
+                        jsonMode, disableThinking, json);
+                assertTrue(gateway.generate("残差连接的作用？", evidence()).generated());
+                JsonNode request = json.readTree(capturedBody.get());
+                assertEquals("deepseek-flash", request.path("model").asText());
+                assertFalse(request.has("extra_body"), "The raw HTTP API needs options at the top level");
+                if (jsonMode) {
+                    assertEquals(json.valueToTree(Map.of("type", "json_object")), request.path("response_format"));
+                    assertTrue(request.path("messages").get(0).path("content").asText().contains("JSON"));
+                } else {
+                    assertFalse(request.has("response_format"));
+                }
+                if (disableThinking) {
+                    assertEquals(json.valueToTree(Map.of("type", "disabled")), request.path("thinking"));
+                } else {
+                    assertFalse(request.has("thinking"));
+                }
+            }
+        }
+        assertEquals(4, requests.get());
+    }
+
+    @Test
+    void jsonModeStillRejectsBlankContentWithAStopFinishReason() throws Exception {
+        reply(200, envelope("   ", "stop"));
+        ModelGateway gateway = new ModelGateway(baseUrl, "test-key", "deepseek-flash", 2, true, true, json);
+        assertFallback(gateway.generate("残差连接的作用？", evidence()), "invalid_response");
     }
 
     @Test

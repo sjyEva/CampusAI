@@ -20,6 +20,12 @@ spring:
 
 campusai:
   dev-password: ${CAMPUSAI_DEV_PASSWORD:CampusAI-Dev-2026}
+  public-demo: ${CAMPUSAI_PUBLIC_DEMO:false}
+  demo-passwords:
+    admin: ${CAMPUSAI_ADMIN_PASSWORD:}
+    teacher: ${CAMPUSAI_TEACHER_PASSWORD:}
+    student: ${CAMPUSAI_STUDENT_PASSWORD:}
+    student2: ${CAMPUSAI_STUDENT2_PASSWORD:}
   rag:
     minimum-coverage: ${CAMPUSAI_RAG_MINIMUM_COVERAGE:0.5}
     model:
@@ -27,3 +33,5 @@ campusai:
       api-key: ${CAMPUSAI_MODEL_API_KEY:}
       name: ${CAMPUSAI_MODEL_NAME:}
       timeout-seconds: ${CAMPUSAI_MODEL_TIMEOUT_SECONDS:10}
+      json-mode: ${CAMPUSAI_MODEL_JSON_MODE:false}
+      disable-thinking: ${CAMPUSAI_MODEL_DISABLE_THINKING:false}
