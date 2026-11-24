@@ -41,7 +41,7 @@ async function submit() {
   try {
     const verificationCode = captcha.value.enabled ? code.value.trim() : undefined
     await signIn(username.value, password.value, verificationCode, captcha.value.uuid)
-    await router.replace({ name: 'courses' })
+    await router.replace({ name: 'overview' })
   } catch (error) {
     errorMessage.value = error.message
     if (captcha.value?.enabled) await loadCaptcha()
@@ -54,41 +54,40 @@ onMounted(loadCaptcha)
 </script>
 
 <template>
-  <main class="login-page">
-    <section class="login-card" aria-labelledby="login-title">
-      <div class="login-cover">
-        <div class="brand"><span class="brand-mark" aria-hidden="true">C</span> CampusAI</div>
-        <h1 id="login-title">课程管理<br />工作台</h1>
-        <p>校园 AI 课程知识助手</p>
+  <div class="login-screen">
+    <form class="login" @submit.prevent="submit">
+      <div class="brand-mark">CA</div>
+      <h1>CampusAI 管理后台</h1>
+      <p class="sub">教师维护课程内容；管理员维护账号与权限。</p>
+      <div class="field">
+        <label for="loginUser">账号</label>
+        <el-input id="loginUser" v-model="username" autocomplete="username" placeholder="教师或管理员账号" />
       </div>
-      <form class="login-form" @submit.prevent="submit">
-        <div>
-          <h2>登录管理后台</h2>
-          <p>使用教师或管理员账号登录。</p>
-        </div>
-        <label for="username">账号</label>
-        <input id="username" v-model.trim="username" autocomplete="username" required />
-        <label for="password">密码</label>
-        <input id="password" v-model="password" type="password" autocomplete="current-password" required />
-        <template v-if="captcha?.enabled">
-          <label for="code">验证码</label>
+      <div class="field">
+        <label for="loginPassword">密码</label>
+        <el-input id="loginPassword" v-model="password" type="password" show-password autocomplete="current-password" />
+      </div>
+      <template v-if="captcha?.enabled">
+        <div class="field">
+          <label for="loginCode">验证码</label>
           <div class="captcha-row">
-            <input id="code" v-model.trim="code" autocomplete="off" required />
+            <el-input id="loginCode" v-model="code" autocomplete="off" />
             <button type="button" class="captcha-image" aria-label="刷新验证码" :disabled="submitting" @click="loadCaptcha">
               <img :src="`data:image/png;base64,${captcha.image}`" alt="登录验证码" />
             </button>
           </div>
-        </template>
-        <p v-if="loadingCaptcha" class="login-status" role="status">正在连接认证服务…</p>
-        <template v-if="captchaError">
-          <p class="error" role="alert">{{ captchaError }}</p>
-          <button type="button" class="secondary-button" @click="loadCaptcha">重新连接</button>
-        </template>
-        <button class="primary-button" type="submit" :disabled="submitting || !captcha">
+        </div>
+      </template>
+      <p v-if="loadingCaptcha" class="note">正在连接认证服务…</p>
+      <p v-if="captchaError" class="error" role="alert">{{ captchaError }}</p>
+      <div class="btn-row">
+        <el-button v-if="captchaError" class="btn-ghost" @click="loadCaptcha">重新连接</el-button>
+        <el-button type="primary" native-type="submit" :disabled="submitting || !captcha" :loading="submitting">
           {{ submitting ? '正在登录…' : '登录' }}
-        </button>
-        <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
-      </form>
-    </section>
-  </main>
+        </el-button>
+      </div>
+      <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+      <p class="note">登录后按返回角色进入。教师看不到用户管理；直接打开管理员地址也会被拦下。<br>演示账号 admin、teacher，密码 CampusAI-Dev-2026。</p>
+    </form>
+  </div>
 </template>

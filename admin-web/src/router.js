@@ -1,25 +1,44 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { restoreSession } from './session.js'
-import AccountView from './views/AccountView.vue'
-import CourseView from './views/CourseView.vue'
+import AdminLayout from './layouts/AdminLayout.vue'
+import { profile, restoreSession } from './session.js'
 import CoursesView from './views/CoursesView.vue'
+import DocsView from './views/DocsView.vue'
 import LoginView from './views/LoginView.vue'
+import OverviewView from './views/OverviewView.vue'
+import QaView from './views/QaView.vue'
+import QuizView from './views/QuizView.vue'
+import StatsView from './views/StatsView.vue'
+import UsersView from './views/UsersView.vue'
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     { path: '/login', name: 'login', component: LoginView },
-    { path: '/courses', name: 'courses', component: CoursesView, meta: { protected: true } },
-    { path: '/courses/:id(\\d+)', name: 'course', component: CourseView, meta: { protected: true } },
-    { path: '/account', name: 'account', component: AccountView, meta: { protected: true } },
-    { path: '/:pathMatch(.*)*', redirect: { name: 'courses' } },
+    {
+      path: '/',
+      component: AdminLayout,
+      meta: { requiresAuth: true },
+      children: [
+        { path: '', redirect: { name: 'overview' } },
+        { path: 'overview', name: 'overview', component: OverviewView },
+        { path: 'courses', name: 'courses', component: CoursesView },
+        { path: 'docs', name: 'docs', component: DocsView },
+        { path: 'quiz', name: 'quiz', component: QuizView },
+        { path: 'qa', name: 'qa', component: QaView },
+        { path: 'stats', name: 'stats', component: StatsView },
+        { path: 'users', name: 'users', component: UsersView, meta: { admin: true } },
+      ],
+    },
+    { path: '/:pathMatch(.*)*', redirect: { name: 'overview' } },
   ],
 })
 
-router.beforeEach(async (route) => {
+router.beforeEach(async (to) => {
   const authenticated = await restoreSession()
-  if (route.meta.protected && !authenticated) return { name: 'login' }
-  if (route.name === 'login' && authenticated) return { name: 'courses' }
+  if (to.name === 'login') return authenticated ? { name: 'overview' } : true
+  if (to.matched.some((record) => record.meta.requiresAuth) && !authenticated) return { name: 'login' }
+  if (to.meta.admin && profile.value?.role !== 'admin') return { name: 'overview', query: { denied: '1' } }
+  return true
 })
 
 export default router
