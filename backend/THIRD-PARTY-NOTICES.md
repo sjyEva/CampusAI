@@ -1,5 +1,16 @@
 # Backend source reference
 
+The RAG module additionally uses Apache PDFBox 3.0.6, Apache POI 5.4.1 and
+Apache Lucene SmartChineseAnalyzer 9.12.3 as Maven dependencies. They are
+distributed under the Apache License 2.0; their original LICENSE/NOTICE files
+remain in the dependency JARs. PDFBox's commons-logging dependency is excluded
+in favor of Spring's existing spring-jcl bridge.
+
+- https://pdfbox.apache.org/
+- https://poi.apache.org/
+- https://lucene.apache.org/
+- https://www.apache.org/licenses/LICENSE-2.0
+
 `AuthController` adapts the login, profile and route response contract from
 [`SysLoginController.java`](https://gitee.com/y_project/RuoYi-Vue/blob/springboot3/ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysLoginController.java)
 in [RuoYi-Vue `springboot3`](https://gitee.com/y_project/RuoYi-Vue/tree/springboot3).

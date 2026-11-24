@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="CampusAI 课程资料检索与引用问答演示。选择课程、查找相关原文并核对资料来源。">
+  <title>CampusAI · 资料检索与引用问答</title>
+  <link rel="stylesheet" href="/rag-demo.css">
+  <script src="/rag-demo.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/rag-demo.html" aria-label="CampusAI 首页">
+      <span class="brand-mark" aria-hidden="true">C<span>·</span></span>
+      <span class="brand-name">CampusAI<small>校园 AI 课程知识助手</small></span>
+    </a>
+    <div class="header-right">
+      <span class="environment-label"><span class="status-dot" aria-hidden="true"></span>课程知识工作台</span>
+      <div id="session-info" class="session-info" hidden>
+        <span id="session-name"></span>
+        <button id="logout-button" class="button button-quiet" type="button">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="page-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span>从一个问题，回到课程原文</p>
+        <h1 id="page-title">资料检索与<br class="hero-break">引用问答演示<span>。</span></h1>
+        <p class="hero-description">把散落在讲义里的知识找回来。<br>在已加入的课程中提问，阅读原文，核对每一处来源。</p>
+        <div class="hero-steps" aria-label="使用步骤">
+          <span><b>01</b>选择课程</span><i aria-hidden="true">→</i>
+          <span><b>02</b>提出问题</span><i aria-hidden="true">→</i>
+          <span><b>03</b>核对原文</span>
+        </div>
+      </div>
+
+      <section id="login-panel" class="login-panel card" aria-labelledby="login-title">
+        <div class="card-kicker">开始一次有依据的查找</div>
+        <h2 id="login-title">登录课程工作台</h2>
+        <p class="muted login-description">使用当前环境的演示账号和密码。</p>
+        <form id="login-form">
+          <label for="username">账号</label>
+          <select id="username" name="username" autocomplete="username" required>
+            <option value="student">学生 · student</option>
+            <option value="teacher">教师 · teacher</option>
+            <option value="student2">学生 · student2</option>
+            <option value="admin">管理员 · admin</option>
+          </select>
+          <label for="password">密码</label>
+          <input id="password" name="password" type="password" placeholder="请输入账号密码" autocomplete="current-password" required>
+          <p id="login-message" class="form-message" role="alert" hidden></p>
+          <button id="login-button" class="button button-primary button-full" type="submit"><span>进入工作台</span><span aria-hidden="true">↗</span></button>
+        </form>
+        <p class="login-footnote"><span aria-hidden="true">◇</span>仅展示当前账号有权限访问的课程</p>
+      </section>
+
+      <aside id="welcome-note" class="welcome-note" hidden>
+        <span class="note-symbol" aria-hidden="true">“</span>
+        <p>找到相关内容只是开始。<br><strong>能回到原文，才便于核对。</strong></p>
+      </aside>
+    </section>
+
+    <section id="workspace" class="workspace" aria-label="课程资料工作台" hidden>
+      <aside class="sidebar">
+        <section class="card course-panel" aria-labelledby="course-title">
+          <div class="section-heading"><h2 id="course-title">当前课程</h2><span class="section-index">01</span></div>
+          <label class="sr-only" for="course-select">选择要查询的课程</label>
+          <select id="course-select" disabled><option value="">正在读取课程…</option></select>
+          <p id="course-description" class="muted course-description"></p>
+          <p id="course-empty" class="inline-note" hidden>暂无可访问课程，请联系教师确认课程权限。</p>
+        </section>
+
+        <section class="card materials-panel" aria-labelledby="materials-title">
+          <div class="section-heading">
+            <h2 id="materials-title">课程资料 <span id="material-count" class="count-badge">0</span></h2>
+            <button id="refresh-materials" class="icon-button" type="button" aria-label="刷新课程资料" title="刷新资料">↻</button>
+          </div>
+          <form id="upload-form" class="upload-form" hidden>
+            <label class="upload-zone" for="upload-file">
+              <span class="upload-symbol" aria-hidden="true">＋</span>
+              <strong id="upload-filename">选择一份课程资料</strong>
+              <span>PDF、DOCX 或 TXT · 不超过 10 MB</span>
+              <input id="upload-file" type="file" accept=".pdf,.docx,.txt">
+            </label>
+            <button id="upload-button" class="button button-secondary button-full" type="submit" disabled>上传并解析</button>
+            <p class="upload-note">解析完成后，点击发布供学生检索。</p>
+          </form>
+          <div id="materials-loading" class="loading-line" role="status" hidden><span class="spinner"></span>正在读取资料</div>
+          <div id="materials-list" class="materials-list"></div>
+          <div id="materials-empty" class="small-empty" hidden>
+            <span aria-hidden="true">▤</span>
+            <p id="materials-empty-text">这门课程暂时没有已发布资料。</p>
+          </div>
+          <p id="materials-message" class="form-message" role="alert" hidden></p>
+        </section>
+      </aside>
+
+      <div class="main-column">
+        <section class="card question-panel" aria-labelledby="question-title">
+          <div class="section-heading">
+            <h2 id="question-title">你想弄清楚什么？</h2>
+            <span id="model-badge" class="mode-badge"><span class="status-dot" aria-hidden="true"></span>等待课程信息</span>
+          </div>
+          <p id="model-note" class="muted question-description">选择课程后确认问答配置；每次查询会显示实际返回状态。</p>
+          <form id="question-form">
+            <label class="sr-only" for="question">输入课程问题</label>
+            <div class="question-input-wrap">
+              <textarea id="question" name="question" maxlength="500" rows="3" placeholder="例如：资料解析需要保留哪些来源信息？" required></textarea>
+              <span id="question-count" class="character-count">0 / 500</span>
+            </div>
+            <div class="question-toolbar">
+              <span class="question-scope"><span aria-hidden="true">⌕</span>仅查找当前课程已发布资料</span>
+              <div class="question-actions">
+                <button id="search-button" class="button button-quiet" type="button" disabled>只检索原文</button>
+                <button id="ask-button" class="button button-primary" type="submit" disabled><span>提问并核对</span><span aria-hidden="true">↗</span></button>
+              </div>
+            </div>
+          </form>
+          <div class="suggestions" aria-label="提问示例">
+            <span>可以这样问</span>
+            <button type="button" data-question="资料解析需要保留哪些来源信息？">资料如何保留来源？</button>
+            <button type="button" data-question="模型超时时如何处理？">模型超时怎么办？</button>
+            <button type="button" data-question="BM25 根据什么排序？">BM25 怎样排序？</button>
+          </div>
+          <p id="question-message" class="form-message" role="alert" hidden></p>
+        </section>
+
+        <section id="answer-panel" class="answer-panel" aria-label="查询结果" aria-live="polite">
+          <div id="answer-empty" class="answer-empty">
+            <div class="empty-art" aria-hidden="true"><span class="paper paper-back"></span><span class="paper paper-front"><i></i><i></i><i></i></span><span class="art-search">⌕</span></div>
+            <h2>让答案有迹可循</h2>
+            <p>输入一个课程问题，相关原文会出现在这里。<br>每条结果都带有资料名和可核对的位置。</p>
+          </div>
+          <div id="answer-loading" class="answer-loading card" role="status" hidden><span class="spinner"></span><div><strong>正在查找课程资料</strong><p>检索原文并核对当前来源，请稍候。</p></div></div>
+          <div id="answer-content" hidden></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><span>CampusAI</span><p>从课程资料出发，让每一次查找都有来源。</p><span class="footer-label">课程知识助手</span></footer>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

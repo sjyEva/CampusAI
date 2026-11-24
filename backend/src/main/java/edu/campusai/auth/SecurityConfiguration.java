@@ -51,6 +51,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/captchaImage").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/rag-demo.html", "/rag-demo.css", "/rag-demo.js").permitAll()
                         .requestMatchers("/getRouters").hasAnyRole("admin", "teacher")
                         .requestMatchers("/campusai/courses", "/campusai/courses/**")
                             .hasAnyRole("admin", "teacher", "student")
