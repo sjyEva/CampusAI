@@ -6,6 +6,12 @@ const courses = ref([])
 const selectedId = ref('all')
 const loading = ref(false)
 const error = ref('')
+let activeRequest = null
+
+function cancelLoad() {
+  activeRequest?.controller.abort()
+  activeRequest = null
+}
 
 export function useCourseScope() {
   const options = computed(() => [
@@ -24,21 +30,33 @@ export function useCourseScope() {
 
   async function load() {
     const token = getToken()
-    if (!token) return
+    if (!token) {
+      resetCourseScope()
+      return
+    }
+    cancelLoad()
+    const request = { controller: new AbortController() }
+    activeRequest = request
+    const isCurrent = () => activeRequest === request && getToken() === token
     loading.value = true
     error.value = ''
     try {
-      const result = await listCourses(token)
+      const result = await listCourses(token, request.controller.signal)
+      if (!isCurrent()) return
       courses.value = Array.isArray(result.data) ? result.data : []
       if (selectedId.value !== 'all' && !courses.value.some((course) => String(course.id) === selectedId.value)) {
         selectedId.value = 'all'
       }
     } catch (err) {
+      if (!isCurrent()) return
       courses.value = []
       if (err.code === 401) throw err
       error.value = err.message
     } finally {
-      loading.value = false
+      if (activeRequest === request) {
+        activeRequest = null
+        loading.value = false
+      }
     }
   }
 
@@ -46,6 +64,7 @@ export function useCourseScope() {
 }
 
 export function resetCourseScope() {
+  cancelLoad()
   courses.value = []
   selectedId.value = 'all'
   loading.value = false

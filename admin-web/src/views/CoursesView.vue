@@ -3,14 +3,14 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getCourse } from '../api/courses.js'
 import PageHead from '../components/PageHead.vue'
-import { useCourseScope } from '../composables/courseScope.js'
+import { useCourseLoader } from '../composables/courseLoader.js'
 import { sampleChapters } from '../mock/sample.js'
 import { getToken, profile } from '../session.js'
 import { redirectIfUnauthorized } from '../utils/authError.js'
 import { toast } from '../utils/toast.js'
 
 const router = useRouter()
-const { visibleCourses, loading, error, load } = useCourseScope()
+const { visibleCourses, loading, error, load } = useCourseLoader(router)
 const creating = ref(false)
 const chaptersOpen = ref(false)
 const chapterLoading = ref(false)
@@ -23,15 +23,17 @@ function ownerLabel() {
 }
 
 async function openChapters(course) {
+  const token = getToken()
   chaptersOpen.value = true
   chapterCourse.value = null
   chapterError.value = ''
   chapterLoading.value = true
   try {
-    const result = await getCourse(getToken(), course.id)
+    const result = await getCourse(token, course.id)
+    if (token !== getToken()) return
     chapterCourse.value = result.data
   } catch (err) {
-    if (await redirectIfUnauthorized(err, router)) return
+    if (await redirectIfUnauthorized(err, router, token)) return
     chapterError.value = err.message
   } finally {
     chapterLoading.value = false

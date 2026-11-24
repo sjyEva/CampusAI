@@ -1,14 +1,14 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
-import { resetCourseScope, useCourseScope } from '../composables/courseScope.js'
+import { useCourseLoader } from '../composables/courseLoader.js'
+import { resetCourseScope } from '../composables/courseScope.js'
 import { profile, signOut } from '../session.js'
-import { redirectIfUnauthorized } from '../utils/authError.js'
 import { toast } from '../utils/toast.js'
 
 const route = useRoute()
 const router = useRouter()
-const { load } = useCourseScope()
+const { load } = useCourseLoader(router)
 const leaving = ref(false)
 
 const groups = computed(() => {
@@ -51,23 +51,17 @@ watch(() => route.query.denied, (denied) => {
   router.replace({ name: 'overview' })
 }, { immediate: true })
 
-onMounted(async () => {
-  try {
-    await load()
-  } catch (error) {
-    await redirectIfUnauthorized(error, router)
-  }
-})
+onMounted(load)
 
 async function handleSignOut() {
   if (leaving.value) return
   leaving.value = true
+  resetCourseScope()
   try {
     await signOut()
   } catch {
     // Local credentials are removed even if the server cannot be reached.
   } finally {
-    resetCourseScope()
     leaving.value = false
     await router.replace({ name: 'login' })
   }
