@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Service
 public class RagMaterialService {
-    public static final String PARSER_VERSION = "text-v1-smartcn-v1";
+    public static final String PARSER_VERSION = "office-v2-smartcn-v1";
     private final RagAccess access;
     private final RagRepository repository;
     private final DocumentParser parser;

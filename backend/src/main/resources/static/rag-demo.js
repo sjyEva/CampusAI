@@ -405,7 +405,7 @@
       const menu = element("div", "material-menu");
       const replacement = element("input");
       replacement.type = "file";
-      replacement.accept = ".pdf,.docx,.txt";
+      replacement.accept = ".pdf,.docx,.txt,.ppt,.pptx,.xls,.xlsx";
       replacement.hidden = true;
       replacement.addEventListener("change", () => {
         const file = replacement.files[0];
@@ -426,7 +426,7 @@
   function checkedFile(file) {
     if (!file || file.size === 0) throw new ApiError("请选择一份非空资料文件。", 400);
     if (file.size > 10 * 1024 * 1024) throw new ApiError("资料不能超过 10 MB，请按章节拆分后上传。", 400);
-    if (!/\.(pdf|docx|txt)$/i.test(file.name)) throw new ApiError("请选择 PDF、DOCX 或 TXT 文件。", 400);
+    if (!/\.(pdf|docx|txt|pptx?|xlsx?)$/i.test(file.name)) throw new ApiError("请选择 PDF、DOCX、TXT、PPT/PPTX 或 XLS/XLSX 文件。", 400);
     const data = new FormData();
     data.append("file", file);
     return data;
@@ -674,9 +674,12 @@
 
   function sourceLocation(source) {
     let position;
-    if (source.pageNumber != null) position = `第 ${source.pageNumber} 页`;
-    else if (source.paragraphStart === source.paragraphEnd) position = `第 ${source.paragraphStart} 段`;
-    else position = `第 ${source.paragraphStart}—${source.paragraphEnd} 段`;
+    if (source.slideNumber != null) position = `第 ${source.slideNumber} 张幻灯片`;
+    else if (source.sheetName != null) position = `工作表「${source.sheetName}」${source.cellRange ? ` · ${source.cellRange}` : ""}`;
+    else if (source.pageNumber != null) position = `第 ${source.pageNumber} 页`;
+    else if (source.paragraphStart != null && source.paragraphStart === source.paragraphEnd) position = `第 ${source.paragraphStart} 段`;
+    else if (source.paragraphStart != null) position = `第 ${source.paragraphStart}—${source.paragraphEnd} 段`;
+    else position = "原文片段";
     return `${position} · v${source.version}${source.heading ? ` · ${source.heading}` : ""}`;
   }
 

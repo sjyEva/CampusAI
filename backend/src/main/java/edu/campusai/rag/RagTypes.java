@@ -10,7 +10,15 @@ public final class RagTypes {
 
     public record Source(String chunkId, String materialId, long courseId, int version,
                          String filename, String text, Integer pageNumber,
-                         Integer paragraphStart, Integer paragraphEnd, String heading) {}
+                         Integer paragraphStart, Integer paragraphEnd, String heading,
+                         Integer slideNumber, String sheetName, String cellRange) {
+        public Source(String chunkId, String materialId, long courseId, int version,
+                      String filename, String text, Integer pageNumber,
+                      Integer paragraphStart, Integer paragraphEnd, String heading) {
+            this(chunkId, materialId, courseId, version, filename, text, pageNumber,
+                    paragraphStart, paragraphEnd, heading, null, null, null);
+        }
+    }
 
     public record SearchHit(Source source, double score, double coverage) {}
     public record SearchResult(String status, List<SearchHit> hits) {}
