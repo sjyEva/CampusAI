@@ -30,4 +30,12 @@ public class CourseController {
                 .map(course -> ApiResult.success().with("data", course))
                 .orElseGet(() -> ApiResult.error(404, "课程不存在或无访问权限"));
     }
+
+    @GetMapping("/campusai/courses/{id}/chapters")
+    public ApiResult chapters(Authentication principal, @PathVariable long id) {
+        DemoAccounts.Account account = accounts.find(principal.getName());
+        return courses.findVisibleChapters(account, id)
+                .map(chapters -> ApiResult.success().with("data", chapters))
+                .orElseGet(() -> ApiResult.error(404, "课程不存在或无访问权限"));
+    }
 }

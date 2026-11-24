@@ -104,7 +104,7 @@ npm.cmd run dev
 | 输入错误密码 | 显示错误信息，保留在登录页 |
 | 退出后访问 `#/overview` | 返回登录页 |
 
-本周已接通的接口是 `POST /login`、`GET /getInfo`、`GET /getRouters`、`GET /campusai/courses` 和 `GET /campusai/courses/{id}`。资料、题库、问答、统计和用户表在 `src/api/content.js` 返回示例，对应路径写在该文件里，等 A、B 的接口就绪后替换。
+本周已接通的接口是 `POST /login`、`GET /getInfo`、`GET /getRouters`、`GET /campusai/courses`、`GET /campusai/courses/{id}` 和 `GET /campusai/courses/{id}/chapters`。资料、题库、问答、统计和用户表在 `src/api/content.js` 返回示例，对应路径写在该文件里，等 A、B 的接口就绪后替换。
 
 可以复制 `admin-web/.env.example` 为 `.env.local`，或在该终端设置代理目标后重启 Vite。
 
@@ -224,6 +224,7 @@ pwsh -NoProfile -File ./scripts/verify-api.ps1 -BaseUrl http://127.0.0.1:8081
 | `GET /getRouters` | 教师、管理员 | 顶层 `data` 包含课程菜单 |
 | `GET /campusai/courses` | Bearer | `data` 为可访问课程数组 |
 | `GET /campusai/courses/{id}` | Bearer | `data` 为可访问课程详情 |
+| `GET /campusai/courses/{id}/chapters` | Bearer | `data` 为可访问课程的章节数组，按 `sortOrder`、`id` 排序。权限、样例数据和本地数据库配置见 [B 部分交接](b-week1.md) |
 | `POST /logout` | Bearer | 撤销当前会话 |
 
 受保护请求使用 `Authorization: Bearer <token>`。客户端同时检查 HTTP 状态及若依风格的 JSON `code`。成功业务码为 200，错误信息在 `msg` 中。课程字段统一为 `id`、`courseCode`、`name`、`description`，详情使用数据库 `id`。

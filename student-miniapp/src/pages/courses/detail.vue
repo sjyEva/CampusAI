@@ -9,17 +9,24 @@
       <view class="course-code">{{ course.courseCode }}</view>
       <view class="title">{{ course.name }}</view>
       <view v-if="course.description" class="muted course-description">{{ course.description }}</view>
+      <view class="chapters">
+        <view class="chapter-heading">课程章节</view>
+        <view v-if="chapters.length === 0" class="muted">本课程暂无章节。</view>
+        <view v-for="chapter in chapters" :key="chapter.id" class="chapter">
+          {{ chapter.sortOrder }}. {{ chapter.title }}
+        </view>
+      </view>
     </view>
   </view>
 </template>
 
 <script>
-import { getCourse } from '../../api/courses.js'
+import { getChapters, getCourse } from '../../api/courses.js'
 import { getToken } from '../../utils/auth.js'
 
 export default {
   data() {
-    return { courseId: '', course: null, loading: false, error: '' }
+    return { courseId: '', course: null, chapters: [], loading: false, error: '' }
   },
   onLoad(options) {
     if (!getToken()) {
@@ -39,9 +46,15 @@ export default {
       this.loading = true
       this.error = ''
       try {
-        const result = await getCourse(this.courseId)
-        if (!result.data?.id) throw new Error('课程详情响应格式有误')
-        this.course = result.data
+        const [detail, chapterList] = await Promise.all([
+          getCourse(this.courseId),
+          getChapters(this.courseId),
+        ])
+        if (!detail.data?.id || !Array.isArray(chapterList.data)) {
+          throw new Error('课程或章节响应格式有误')
+        }
+        this.course = detail.data
+        this.chapters = chapterList.data
       } catch (error) {
         if (error.code === 401 && !getToken()) {
           uni.reLaunch({ url: '/pages/login/index' })
@@ -72,6 +85,22 @@ export default {
 
 .course-description {
   margin-top: 20rpx;
+  overflow-wrap: anywhere;
+}
+
+.chapters {
+  margin-top: 24rpx;
+  border-top: 1px solid #dce5ec;
+  padding-top: 20rpx;
+}
+
+.chapter-heading {
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+.chapter {
+  padding: 8rpx 0;
   overflow-wrap: anywhere;
 }
 

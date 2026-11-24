@@ -53,6 +53,10 @@ if ($anonymous.Status -notin @(401, 403) -and $anonymous.Payload.code -notin @(4
 if ($anonymous.Payload.data) {
     throw 'Anonymous course list returned course data.'
 }
+$anonymousChapters = Invoke-CampusApi -Path '/campusai/courses/1/chapters'
+if ($anonymousChapters.Payload.code -ne 401 -or $anonymousChapters.Payload.data) {
+    throw 'Anonymous chapter requests should return code 401 and no data.'
+}
 Write-Host 'PASS anonymous request denied'
 
 $wrongLogin = Invoke-CampusApi -Path '/login' -Method POST -Body @{
@@ -70,6 +74,11 @@ $scenarios = @(
     @{ Username = 'student'; Role = 'student'; Courses = @('CS101') }
     @{ Username = 'student2'; Role = 'student'; Courses = @('SE101') }
 )
+
+$chapterIdsByCourse = @{
+    CS101 = '102,101'
+    SE101 = '201'
+}
 
 foreach ($scenario in $scenarios) {
     $username = $scenario.Username
@@ -104,6 +113,12 @@ foreach ($scenario in $scenarios) {
         if ($detail.Payload.data.courseCode -cne $course.courseCode) {
             throw "$username course detail does not match the visible course list."
         }
+        $chapters = Invoke-CampusApi -Path "/campusai/courses/$($course.id)/chapters" -Token $token
+        Assert-ApiSuccess $chapters "$username course $($course.id) chapters"
+        $chapterIds = @($chapters.Payload.data | ForEach-Object { $_.id }) -join ','
+        if ($chapterIds -ne $chapterIdsByCourse[$course.courseCode]) {
+            throw "$username received unexpected chapters or order for $($course.courseCode)."
+        }
     }
 
     $menu = Invoke-CampusApi -Path '/getRouters' -Token $token
@@ -116,6 +131,10 @@ foreach ($scenario in $scenarios) {
         if ($forbidden.Payload.code -ne 404 -or $forbidden.Payload.data) {
             throw "$username received an unavailable course detail."
         }
+        $forbiddenChapters = Invoke-CampusApi -Path "/campusai/courses/$forbiddenId/chapters" -Token $token
+        if ($forbiddenChapters.Payload.code -ne 404 -or $forbiddenChapters.Payload.data) {
+            throw "$username received chapter data for a course outside their scope."
+        }
     } else {
         Assert-ApiSuccess $menu "$username management menu"
     }
@@ -123,7 +142,7 @@ foreach ($scenario in $scenarios) {
     if ($missing.Payload.code -ne 404 -or $missing.Payload.data) {
         throw "$username should receive no detail for a missing course."
     }
-    Write-Host "PASS $username course details and menu scope"
+    Write-Host "PASS $username course details, chapters and menu scope"
 
     $logout = Invoke-CampusApi -Path '/logout' -Method POST -Token $token
     Assert-ApiSuccess $logout "$username logout"

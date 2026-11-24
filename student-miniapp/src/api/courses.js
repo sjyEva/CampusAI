@@ -7,3 +7,7 @@ export function getCourses() {
 export function getCourse(id) {
   return request({ url: '/campusai/courses/' + encodeURIComponent(id) })
 }
+
+export function getChapters(id) {
+  return request({ url: '/campusai/courses/' + encodeURIComponent(id) + '/chapters' })
+}
