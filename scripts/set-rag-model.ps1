@@ -20,14 +20,17 @@ New-Item -ItemType Directory -Path $secretDirectory -Force | Out-Null
 $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User
 $acl = [Security.AccessControl.DirectorySecurity]::new()
 $acl.SetAccessRuleProtection($true, $false)
-$acl.SetOwner($sid)
+
 $inheritance = [Security.AccessControl.InheritanceFlags]'ContainerInherit,ObjectInherit'
 $propagation = [Security.AccessControl.PropagationFlags]::None
 $allow = [Security.AccessControl.AccessControlType]::Allow
 foreach ($principal in @($sid, [Security.Principal.SecurityIdentifier]::new('S-1-5-18'))) {
     $acl.AddAccessRule([Security.AccessControl.FileSystemAccessRule]::new($principal, 'FullControl', $inheritance, $propagation, $allow))
 }
-Set-Acl -LiteralPath $secretDirectory -AclObject $acl
+[System.IO.FileSystemAclExtensions]::SetAccessControl(
+    [System.IO.DirectoryInfo]::new($secretDirectory),
+    $acl
+)
 $config = @{
     baseUrl = $BaseUrl.TrimEnd('/'); model = $Model; timeoutSeconds = $TimeoutSeconds
     jsonMode = $JsonMode; disableThinking = $DisableThinking
