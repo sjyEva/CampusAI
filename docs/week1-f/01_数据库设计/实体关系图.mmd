@@ -1,0 +1,40 @@
+erDiagram
+    campus_course ||--o{ campus_course_enrollment : enrolls
+    campus_course ||--o{ rag_material : contains
+    rag_material ||--o{ rag_chunk : contains
+    campus_course {
+        BIGINT id PK
+        VARCHAR course_code UK
+        VARCHAR name
+        VARCHAR description
+        VARCHAR teacher_username
+    }
+    campus_course_enrollment {
+        BIGINT course_id PK, FK
+        VARCHAR student_username PK
+    }
+    rag_material {
+        VARCHAR id PK
+        BIGINT course_id FK
+        VARCHAR filename
+        LONGBLOB content
+        CHAR sha256
+        VARCHAR parse_status
+        BOOLEAN published
+        INT version
+        VARCHAR parser_version
+        VARCHAR error_message
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+    rag_chunk {
+        VARCHAR id PK
+        VARCHAR material_id FK "unique with version and ordinal"
+        INT version
+        INT ordinal
+        TEXT text
+        INT page_number
+        INT paragraph_start
+        INT paragraph_end
+        VARCHAR heading
+    }

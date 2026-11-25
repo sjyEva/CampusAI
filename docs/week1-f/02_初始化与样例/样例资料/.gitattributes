@@ -1,0 +1,2 @@
+*.txt -text whitespace=cr-at-eol
+README.md -text whitespace=cr-at-eol
