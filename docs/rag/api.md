@@ -15,6 +15,7 @@
 | `PATCH /materials/{id}/publication` | `{"published":true,"expectedVersion":1}`，严格布尔值和正整数 | 发布/下架后资料状态；仅管理者 |
 | `DELETE /materials/{id}` | query `version` | 删除资料与片段；仅管理者 |
 | `GET /materials/{id}/file` | query `version` | 授权下载，`Cache-Control: no-store`、`X-Material-Version`；学生只能下载当前已发布资料 |
+| `GET /materials/{id}/preview` | 必填 `version`，可选 `offset=0&limit=12`，`limit` 1–30 | 按资料内顺序返回 `{sources: Source[], nextOffset: number|null}`，只读取有权限课程中当前已发布并 READY 的版本 |
 | `GET /search?q=...&topK=3` | q 非空、最多 500 字符；topK 1–10 | `SearchResult` |
 | `GET /sources/{chunkId}` | 无 | 当前可见来源；失效、越权、旧版本均 code404 |
 | `POST /ask` | `{"question":"残差连接有什么作用？"}`，严格字符串 | `Answer` |

@@ -25,6 +25,7 @@
       <button class="primary" :loading="submitting" :disabled="submitting || !captchaReady" @tap="signIn">
         登录
       </button>
+      <button class="study-text-btn demo-link" :disabled="submitting" @tap="openDemo">返回演示</button>
     </view>
   </view>
 </template>
@@ -32,6 +33,7 @@
 <script>
 import { getCodeImg, login } from '../../api/login.js'
 import { getToken, setToken } from '../../utils/auth.js'
+import { signOut, studentSession } from '../../api/session.js'
 
 export default {
   data() {
@@ -56,6 +58,9 @@ export default {
     this.loadCaptcha()
   },
   methods: {
+    openDemo() {
+      uni.reLaunch({ url: '/pages/courses/index' })
+    },
     async loadCaptcha(keepError = false) {
       if (this.captchaLoading) return
       this.captchaLoading = true
@@ -99,6 +104,10 @@ export default {
         const result = await login(credentials)
         if (typeof result.token !== 'string' || !result.token) throw new Error('登录响应缺少凭证')
         setToken(result.token)
+        try { await studentSession() } catch (error) {
+          await signOut()
+          throw error
+        }
         uni.reLaunch({ url: '/pages/courses/index' })
       } catch (error) {
         this.error = error.message
@@ -123,6 +132,8 @@ export default {
 .subtitle {
   margin: 12rpx 0 40rpx;
 }
+
+.demo-link { display: flex; margin: 12rpx auto 0; }
 
 .field {
   margin: 28rpx 0;

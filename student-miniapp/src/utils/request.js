@@ -16,7 +16,7 @@ export default function request(options) {
       method: options.method || 'GET',
       data: options.data,
       header,
-      timeout: 10000,
+      timeout: options.timeout || 10000,
       success(response) {
         const payload = response.data
         const failedHttp = response.statusCode < 200 || response.statusCode >= 300
@@ -33,8 +33,10 @@ export default function request(options) {
         error.code = code
         reject(error)
       },
-      fail() {
-        reject(new Error('无法连接后端，请检查服务地址后重试'))
+      fail(error) {
+        reject(new Error(error?.errMsg?.includes('timeout')
+          ? '等待后端响应超时，请重试'
+          : '无法连接后端，请检查服务地址后重试'))
       }
     })
   })

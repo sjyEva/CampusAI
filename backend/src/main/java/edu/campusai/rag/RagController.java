@@ -99,6 +99,13 @@ public class RagController {
                 .header("X-Content-Type-Options", "nosniff").body(file.bytes());
     }
 
+    @GetMapping("/materials/{id}/preview")
+    public ApiResult preview(Authentication principal, @PathVariable long courseId, @PathVariable String id,
+                             @RequestParam int version, @RequestParam(defaultValue = "0") int offset,
+                             @RequestParam(defaultValue = "12") int limit) {
+        return ok(materials.preview(account(principal), courseId, id, version, offset, limit));
+    }
+
     @GetMapping("/search")
     public ApiResult search(Authentication principal, @PathVariable long courseId, @RequestParam String q,
                             @RequestParam(defaultValue = "3") int topK) {
