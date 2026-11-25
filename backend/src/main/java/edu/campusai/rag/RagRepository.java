@@ -104,6 +104,14 @@ public class RagRepository {
                 .param("course", courseId).param("id", id).query(Source.class).optional();
     }
 
+    public List<Source> preview(long courseId, String id, int version, int offset, int limit) {
+        return jdbc.sql(SOURCE_SELECT + """
+                 WHERE m.course_id=:course AND m.id=:id AND c.version=:version AND c.ordinal>:offset AND
+                """ + LIVE + " ORDER BY c.ordinal LIMIT :limit")
+                .param("course", courseId).param("id", id).param("version", version)
+                .param("offset", offset).param("limit", limit).query(Source.class).list();
+    }
+
     public boolean allCurrent(long courseId, List<Source> sources) {
         if (sources.isEmpty()) return true;
         List<String> ids = sources.stream().map(Source::chunkId).distinct().toList();

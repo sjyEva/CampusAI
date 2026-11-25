@@ -54,7 +54,14 @@ class RagApiTest {
         assertEquals(1, uploaded.path("version").asInt());
         assertTrue(search().path("hits").isEmpty());
         check(get(BASE + "/materials/" + id + "/file"), student, 404);
+        String preview = BASE + "/materials/" + id + "/preview";
+        check(get(preview).param("version", "1"), student, 404);
         publish(id, true);
+        JsonNode visible = data(get(preview).param("version", "1").param("limit", "1"), student);
+        assertEquals(TEXT, visible.path("sources").get(0).path("text").asText());
+        assertTrue(visible.path("nextOffset").isNull());
+        check(get(preview).param("version", "1"), login("student2"), 404);
+        check(get(preview).param("version", "2"), student, 409);
         JsonNode hit = search().path("hits").get(0).path("source");
         assertEquals(TEXT, hit.path("text").asText());
         assertEquals(1, hit.path("paragraphStart").asInt());
@@ -73,6 +80,7 @@ class RagApiTest {
         assertEquals("no_evidence", search().path("status").asText());
         check(get(BASE + "/sources/" + chunkId), student, 404);
         check(get(BASE + "/materials/" + id + "/file"), student, 404);
+        check(get(preview).param("version", "1"), student, 404);
     }
 
     @Test

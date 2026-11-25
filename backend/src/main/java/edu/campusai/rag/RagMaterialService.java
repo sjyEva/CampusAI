@@ -138,6 +138,29 @@ public class RagMaterialService {
         return file(account, courseId, id, null);
     }
 
+    public MaterialPreview preview(Account account, long courseId, String id, int version, int offset, int limit) {
+        if (version < 1 || offset < 0 || limit < 1 || limit > 30) {
+            throw new RagException(400, "预览版本、偏移量或读取条数无效");
+        }
+        Material material = detail(account, courseId, id);
+        checkPreviewVersion(material, version);
+        List<Source> pieces = repository.preview(courseId, id, version, offset, limit + 1);
+        if (pieces.isEmpty() && offset < material.chunkCount()) {
+            checkPreviewVersion(detail(account, courseId, id), version);
+        }
+        Integer nextOffset = pieces.size() > limit ? offset + limit : null;
+        return new MaterialPreview(nextOffset == null ? pieces : pieces.subList(0, limit), nextOffset);
+    }
+
+    private static void checkPreviewVersion(Material material, int version) {
+        if (!material.published() || !material.parseStatus().equals("READY")) {
+            throw new RagException(404, "资料不存在或尚未发布");
+        }
+        if (material.version() != version) {
+            throw new RagException(409, "资料已更新，请刷新并核对新版本后重试");
+        }
+    }
+
     public FileData file(Account account, long courseId, String id, Integer expectedVersion) {
         access.read(account, courseId);
         // Read eligibility and bytes together; never resolve a client-supplied filesystem path.

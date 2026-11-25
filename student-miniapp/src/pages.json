@@ -1,21 +1,36 @@
 {
   "pages": [
     {
-      "path": "pages/login/index",
-      "style": { "navigationBarTitleText": "学生登录" }
-    },
-    {
       "path": "pages/courses/index",
-      "style": { "navigationBarTitleText": "我的课程" }
+      "style": { "navigationBarTitleText": "CampusAI", "navigationStyle": "custom" }
     },
     {
       "path": "pages/courses/detail",
-      "style": { "navigationBarTitleText": "课程详情" }
+      "style": { "navigationBarTitleText": "课程详情", "navigationStyle": "custom" }
+    },
+    {
+      "path": "pages/library/reader",
+      "style": { "navigationBarTitleText": "资料预览" }
+    },
+    {
+      "path": "pages/library/edit",
+      "style": { "navigationBarTitleText": "个人资料" }
+    },
+    {
+      "path": "pages/login/index",
+      "style": { "navigationBarTitleText": "连接 CampusAI" }
+    },
+    {
+      "path": "pages/courses/qa",
+      "style": {
+        "navigationBarTitleText": "课程问答",
+        "disableScroll": true
+      }
     }
   ],
   "globalStyle": {
-    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarBackgroundColor": "#fbf8f0",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f4f6f9"
+    "backgroundColor": "#f7f4ed"
   }
 }

@@ -31,5 +31,6 @@ public final class RagTypes {
         }
     }
     public record Capabilities(boolean generationConfigured, int answerTimeoutSeconds) {}
+    public record MaterialPreview(List<Source> sources, Integer nextOffset) {}
     public record FileData(String filename, byte[] bytes, int version) {}
 }
