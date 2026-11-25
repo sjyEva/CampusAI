@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS campus_course_enrollment (
     FOREIGN KEY (course_id) REFERENCES campus_course(id)
 );
 
+CREATE TABLE IF NOT EXISTS campus_course_chapter (
+    id BIGINT PRIMARY KEY,
+    course_id BIGINT NOT NULL,
+    title VARCHAR(120) NOT NULL,
+    sort_order INT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES campus_course(id)
+);
+
 -- E's module-owned ingestion adapter. B may call RagMaterialService from its
 -- material lifecycle; do not maintain a second independent published flag.
 CREATE TABLE IF NOT EXISTS rag_material (

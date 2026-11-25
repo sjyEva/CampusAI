@@ -86,6 +86,61 @@ class CourseAccessTest {
     }
 
     @Test
+    @Transactional
+    void chaptersFollowCourseScopeAndReturnAnEmptyListForAnAccessibleEmptyCourse() throws Exception {
+        jdbc.sql("""
+                INSERT INTO campus_course (id, course_code, name, description, teacher_username)
+                VALUES (3, 'WEB101', 'Web 应用开发', '用于验证空章节与教师课程隔离', 'otherTeacher')
+                """).update();
+        jdbc.sql("""
+                INSERT INTO campus_course_chapter (id, course_id, title, sort_order)
+                VALUES (103, 1, '程序设计基础', 2)
+                """).update();
+
+        mvc.perform(get("/campusai/courses/1/chapters"))
+                .andExpect(jsonPath("$.code").value(401));
+
+        String student = login("student");
+        mvc.perform(get("/campusai/courses/1/chapters").header(HttpHeaders.AUTHORIZATION, student))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.length()").value(3))
+                .andExpect(jsonPath("$.data[0].id").value(102))
+                .andExpect(jsonPath("$.data[0].title").value("课程导论"))
+                .andExpect(jsonPath("$.data[0].sortOrder").value(1))
+                .andExpect(jsonPath("$.data[1].id").value(101))
+                .andExpect(jsonPath("$.data[2].id").value(103));
+        for (long unavailableCourseId : new long[] {2, 999}) {
+            mvc.perform(get("/campusai/courses/{id}/chapters", unavailableCourseId)
+                            .header(HttpHeaders.AUTHORIZATION, student))
+                    .andExpect(jsonPath("$.code").value(404))
+                    .andExpect(jsonPath("$.data").doesNotExist());
+        }
+        mvc.perform(get("/campusai/courses/invalid/chapters").header(HttpHeaders.AUTHORIZATION, student))
+                .andExpect(jsonPath("$.code").value(400));
+
+        String otherStudent = login("student2");
+        mvc.perform(get("/campusai/courses/2/chapters").header(HttpHeaders.AUTHORIZATION, otherStudent))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].id").value(201));
+        mvc.perform(get("/campusai/courses/1/chapters").header(HttpHeaders.AUTHORIZATION, otherStudent))
+                .andExpect(jsonPath("$.code").value(404));
+
+        String teacher = login("teacher");
+        mvc.perform(get("/campusai/courses/2/chapters").header(HttpHeaders.AUTHORIZATION, teacher))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data[0].id").value(201));
+        mvc.perform(get("/campusai/courses/3/chapters").header(HttpHeaders.AUTHORIZATION, teacher))
+                .andExpect(jsonPath("$.code").value(404));
+
+        String admin = login("admin");
+        mvc.perform(get("/campusai/courses/3/chapters").header(HttpHeaders.AUTHORIZATION, admin))
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
     void malformedRequestsAndUnavailableCoursesUseTheCommonEnvelope() throws Exception {
         mvc.perform(post("/login").contentType(MediaType.APPLICATION_JSON).content("{broken"))
                 .andExpect(jsonPath("$.code").value(400))
