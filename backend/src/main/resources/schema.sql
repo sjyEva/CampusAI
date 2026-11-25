@@ -52,3 +52,13 @@ CREATE TABLE IF NOT EXISTS rag_chunk (
     UNIQUE (material_id, version, ordinal),
     FOREIGN KEY (material_id) REFERENCES rag_material(id) ON DELETE CASCADE
 );
+
+-- Additive extension: existing PDF/DOCX/TXT chunks need no migration or rewrite.
+-- Both H2 and MySQL cascade location deletion with the owning chunk.
+CREATE TABLE IF NOT EXISTS rag_chunk_location (
+    chunk_id VARCHAR(36) PRIMARY KEY,
+    slide_number INT,
+    sheet_name VARCHAR(255),
+    cell_range VARCHAR(64),
+    FOREIGN KEY (chunk_id) REFERENCES rag_chunk(id) ON DELETE CASCADE
+);

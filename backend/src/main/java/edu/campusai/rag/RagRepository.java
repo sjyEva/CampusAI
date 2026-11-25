@@ -13,8 +13,10 @@ public class RagRepository {
     private static final String LIVE = "m.published = TRUE AND m.parse_status = 'READY' AND c.version = m.version";
     private static final String SOURCE_SELECT = """
             SELECT c.id AS chunk_id, m.id AS material_id, m.course_id, c.version,
-                   m.filename, c.text, c.page_number, c.paragraph_start, c.paragraph_end, c.heading
+                   m.filename, c.text, c.page_number, c.paragraph_start, c.paragraph_end, c.heading,
+                   l.slide_number, l.sheet_name, l.cell_range
             FROM rag_chunk c JOIN rag_material m ON c.material_id = m.id
+            LEFT JOIN rag_chunk_location l ON l.chunk_id = c.id
             """;
     private static final String MATERIAL_SELECT = """
             SELECT m.id, m.course_id, m.filename, m.parse_status, m.published, m.version,
@@ -69,6 +71,13 @@ public class RagRepository {
                 .param("ordinal", ordinal).param("text", chunk.text()).param("page", chunk.pageNumber())
                 .param("start", chunk.paragraphStart()).param("end", chunk.paragraphEnd())
                 .param("heading", chunk.heading()).update();
+        if (chunk.slideNumber() != null || chunk.sheetName() != null || chunk.cellRange() != null) {
+            jdbc.sql("""
+                    INSERT INTO rag_chunk_location(chunk_id,slide_number,sheet_name,cell_range)
+                    VALUES(:id,:slide,:sheet,:cells)
+                    """).param("id", id).param("slide", chunk.slideNumber())
+                    .param("sheet", chunk.sheetName()).param("cells", chunk.cellRange()).update();
+        }
     }
 
     public void finish(String id, String status, String error) {
