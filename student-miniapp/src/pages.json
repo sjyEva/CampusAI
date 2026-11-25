@@ -11,11 +11,18 @@
     {
       "path": "pages/courses/detail",
       "style": { "navigationBarTitleText": "课程详情" }
+    },
+    {
+      "path": "pages/courses/qa",
+      "style": {
+        "navigationBarTitleText": "课程问答",
+        "disableScroll": true
+      }
     }
   ],
   "globalStyle": {
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f4f6f9"
+    "backgroundColor": "#f5f6f8"
   }
 }

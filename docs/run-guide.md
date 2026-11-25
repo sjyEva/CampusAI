@@ -131,10 +131,22 @@ npm.cmd run preview
 ```powershell
 Set-Location student-miniapp
 npm.cmd ci
+```
+
+团队 AppID 保存在本机的 `student-miniapp/src/project.config.json`，该文件已加入 Git 忽略规则。首次配置时可使用已有开发产物中的配置作为模板。如果没有产物，先生成一份模板。
+
+```powershell
+npm.cmd run build:mp-weixin
+Copy-Item -LiteralPath 'dist/build/mp-weixin/project.config.json' -Destination 'src/project.config.json'
+```
+
+在 `src/project.config.json` 中将 `appid` 改为团队可用的 AppID，然后启动下面的命令。编译器会将本机配置带入产物。只在 `dist` 中修改 `appid` 的话，重新构建可能将它写回 `touristappid`。
+
+```powershell
 npm.cmd run dev:mp-weixin
 ```
 
-将 `student-miniapp/src/manifest.json` 中 `mp-weixin.appid` 填为团队可用的小程序 AppID。使用微信开发者工具导入构建生成的 `student-miniapp/dist/dev/mp-weixin` 目录。
+使用微信开发者工具导入 `student-miniapp/dist/dev/mp-weixin`。如果后端使用其他端口，设置 `VITE_CAMPUSAI_API_BASE_URL` 后重启构建。
 
 学生端使用 `package-lock.json` 锁定依赖。请使用符合 `package.json` 要求的 Node.js 版本。
 
@@ -155,6 +167,8 @@ npm.cmd run dev:mp-weixin
 | 修改详情页路由访问未选课程 ID | 接口拒绝返回该课程信息 |
 | 后端停止后重新加载 | 显示连接错误并可重试 |
 | 会话失效后请求课程 | 清除失效登录态并回到登录页 |
+| 课程详情 → 课程问答 → 点击示例问题 | 显示聊天式回答，以及资料名和段落 |
+| 点击「查看原文」，再点击「收起原文」 | 原文片段可展开和收起 |
 
 ### 5.2 H5 浏览器联调入口
 
@@ -191,9 +205,13 @@ H5 静态部署同样需要 `/api` 代理。
 | 错误密码 | 微信模拟器和 H5 均提示“账号或密码错误” |
 | 学生登录与课程详情 | 两端均验证 `student` 只看到 `CS101`，可查看计算机导论详情 |
 | 退出后切换学生 | 两端均返回登录页，`student2` 登录后只看到 `SE101`，可查看软件工程详情 |
+| 问答原型 | 微信模拟器及 H5 均验证从课程详情进入、发送示例问题及展开原文。H5 另验证收起原文和非示例问题提示 |
 | 真实 HTTP 接口 | `scripts/verify-api.ps1` 通过。学生课程范围、跨课程拒绝和退出后令牌失效均符合预期 |
+| 后端回归 | `mvn test` 共 86 项，均通过 |
 
-本次覆盖学生登录、我的课程和课程详情三个页面，以及微信模拟器断开后重试连接的操作。微信真机待验，问答入口和引用展示原型待设计。
+本次覆盖学生登录、我的课程和课程详情，以及微信模拟器断开后重试连接的操作。微信真机待验。
+
+学生端页面清单为登录、我的课程、课程详情和课程问答。问答页使用 `GET /campusai/courses/{id}` 获取课程信息并校验课程访问权限，回答和引用来自 `docs/rag/samples` 中的示例，展示为「原型预览」。真实检索、问答与来源查询的接口约定见 [RAG 接口文档](rag/api.md)。
 
 ## 6 自动验证
 
@@ -256,7 +274,7 @@ pwsh -NoProfile -File ./scripts/verify-api.ps1 -BaseUrl http://127.0.0.1:8081
 | --- | --- | --- |
 | A 思佳怡 | 统一账号创建规则、注册方案和角色权限矩阵，将演示身份迁移为持久化用户；定稿错误码及接口规范 | 权限矩阵、认证接口文档、正式账户表方案 |
 | B 陈用礼 | 定稿课程、选课、章节、资料及练习领域接口，明确教师课程归属、学生加入方式和业务状态 | 业务 API 初稿、用例图、功能模块图 |
-| C 张涵 | 补充问答入口与引用展示原型 | 小程序编译及登录记录、页面清单见第 5.3 节，问答原型待交 |
+| C 张涵 | 第一周学生端本机验收已完成 | 小程序编译及登录记录、页面清单和问答原型见第 5.3 节 |
 | D 卢冰玲 | 第 2 周把资料上传、解析状态、失败原因和发布接到真实接口；本周页面框架与角色菜单已可演示 | 可操作的上传和发布页面 |
 | E 杨宇轩 | 使用真实样例验证文本型 PDF、DOCX、TXT 提取及来源位置，试跑中文 BM25，验证模型可用性和失败响应 | 三类解析结果、片段字段、检索及模型验证记录 |
 | F 洪少敏 | 与 A、B 定稿 ER 图、MySQL 8 开发环境及迁移脚本，准备样例资料、共享测试环境及测试清单 | ER 图、数据库初始化说明、数据来源与验收清单 |

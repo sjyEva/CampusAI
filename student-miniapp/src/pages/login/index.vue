@@ -113,8 +113,8 @@ export default {
 
 <style scoped>
 .login-card {
-  background: #fff;
-  border: 1px solid #dce5ec;
+  background: var(--campus-surface);
+  border: 1px solid var(--campus-line);
   border-radius: 20rpx;
   margin-top: 64rpx;
   padding: 36rpx;
@@ -129,7 +129,7 @@ export default {
 }
 
 .field input {
-  border: 1px solid #cad6e1;
+  border: 1px solid var(--campus-line-strong);
   border-radius: 10rpx;
   height: 84rpx;
   margin-top: 10rpx;

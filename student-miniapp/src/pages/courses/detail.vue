@@ -9,6 +9,10 @@
       <view class="course-code">{{ course.courseCode }}</view>
       <view class="title">{{ course.name }}</view>
       <view v-if="course.description" class="muted course-description">{{ course.description }}</view>
+      <navigator :url="'/pages/courses/qa?id=' + course.id" class="qa-entry">
+        <text>课程问答</text>
+        <text aria-hidden="true">›</text>
+      </navigator>
     </view>
   </view>
 </template>
@@ -58,14 +62,14 @@ export default {
 
 <style scoped>
 .course-card {
-  background: #fff;
-  border: 1px solid #dce5ec;
+  background: var(--campus-surface);
+  border: 1px solid var(--campus-line);
   border-radius: 16rpx;
   padding: 30rpx;
 }
 
 .course-code {
-  color: #215882;
+  color: var(--campus-accent);
   font-size: 25rpx;
   margin-bottom: 10rpx;
 }
@@ -73,6 +77,19 @@ export default {
 .course-description {
   margin-top: 20rpx;
   overflow-wrap: anywhere;
+}
+
+.qa-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 32rpx;
+  padding: 18rpx 22rpx;
+  border: 1px solid var(--campus-accent);
+  border-radius: 12rpx;
+  color: var(--campus-accent);
+  font-weight: 600;
 }
 
 .retry {

@@ -107,8 +107,8 @@ export default {
 }
 
 .course-card {
-  background: #fff;
-  border: 1px solid #dce5ec;
+  background: var(--campus-surface);
+  border: 1px solid var(--campus-line);
   border-radius: 16rpx;
   margin-bottom: 20rpx;
   padding: 26rpx;
@@ -120,7 +120,7 @@ export default {
 }
 
 .course-code {
-  color: #215882;
+  color: var(--campus-accent);
   font-size: 25rpx;
   margin-top: 6rpx;
 }

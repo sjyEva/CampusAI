@@ -4,8 +4,20 @@ export default {}
 
 <style>
 page {
-  background: #f4f6f9;
-  color: #1b2c40;
+  /* The palette follows admin-web/src/style.css. */
+  --campus-bg: #f5f6f8;
+  --campus-ink: #161513;
+  --campus-muted: #6f6a62;
+  --campus-line: rgba(22, 21, 19, 0.12);
+  --campus-line-strong: rgba(22, 21, 19, 0.18);
+  --campus-accent: #5c5140;
+  --campus-gold: #a8925a;
+  --campus-warm: #f8f4eb;
+  --campus-danger: #8d3a32;
+  --campus-surface: #fff;
+  background: var(--campus-bg);
+  color: var(--campus-ink);
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
   font-size: 30rpx;
 }
 
@@ -19,22 +31,23 @@ page {
 }
 
 .muted {
-  color: #526881;
+  color: var(--campus-muted);
 }
 
 .error {
-  color: #a33a35;
+  color: var(--campus-danger);
   margin: 24rpx 0;
 }
 
 .primary {
   margin-top: 32rpx;
-  background: #215882;
-  color: #fff;
+  border-radius: 12rpx;
+  background: var(--campus-ink);
+  color: #f6f1e6;
 }
 
 .primary[disabled] {
-  background: #d5dfe8;
-  color: #4c6072;
+  background: #eceae6;
+  color: var(--campus-muted);
 }
 </style>
