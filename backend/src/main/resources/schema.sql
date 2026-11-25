@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS campus_course_enrollment (
     FOREIGN KEY (course_id) REFERENCES campus_course(id)
 );
 
+CREATE TABLE IF NOT EXISTS campus_course_chapter (
+    id BIGINT PRIMARY KEY,
+    course_id BIGINT NOT NULL,
+    title VARCHAR(120) NOT NULL,
+    sort_order INT NOT NULL,
+    FOREIGN KEY (course_id) REFERENCES campus_course(id)
+);
+
 -- E's module-owned ingestion adapter. B may call RagMaterialService from its
 -- material lifecycle; do not maintain a second independent published flag.
 CREATE TABLE IF NOT EXISTS rag_material (
@@ -43,4 +51,14 @@ CREATE TABLE IF NOT EXISTS rag_chunk (
     heading VARCHAR(700),
     UNIQUE (material_id, version, ordinal),
     FOREIGN KEY (material_id) REFERENCES rag_material(id) ON DELETE CASCADE
+);
+
+-- Additive extension: existing PDF/DOCX/TXT chunks need no migration or rewrite.
+-- Both H2 and MySQL cascade location deletion with the owning chunk.
+CREATE TABLE IF NOT EXISTS rag_chunk_location (
+    chunk_id VARCHAR(36) PRIMARY KEY,
+    slide_number INT,
+    sheet_name VARCHAR(255),
+    cell_range VARCHAR(64),
+    FOREIGN KEY (chunk_id) REFERENCES rag_chunk(id) ON DELETE CASCADE
 );

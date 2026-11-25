@@ -21,6 +21,8 @@
 
 `courseId` 使用当前课程表的数值 ID；`materialId/chunkId` 是不透明 UUID 字符串，不能猜测文件路径。即使 UUID 正确，也不能通过另一课程入口读取。
 
+上传和替换仍是单文件 multipart `file`，支持 `.pdf/.docx/.txt/.ppt/.pptx/.xls/.xlsx`，大小上限 10 MB。后端按文件实际类型校验，不能只改扩展名；具体文本提取范围、公式缓存和容量限制见 [模块说明](README.md#解析索引与状态)。
+
 资料列表或引用显示 v1 时，写操作和下载应传对应的 `version=1`；发布/下架通过 JSON 的 `expectedVersion` 传入。锁行后的当前版本不符返回 `code=409`，调用方刷新资料并让用户核对，不能自动重试写操作。版本字段为兼容旧客户端可省略；省略仍按当前版本执行，**不具备防止旧页面误操作的保护**。演示页已对所有这些操作传版本。下载在一次查询取得的状态、版本和文件字节上校验，避免旧引用跳到新文件；不保存历史文件版本。
 
 能力示例：`{"generationConfigured":false,"answerTimeoutSeconds":45}`。`generationConfigured=true` 只表示已填入模型地址及名称，不证明服务健康。问答前端超时使用 `answerTimeoutSeconds`（至少 45 秒，模型上限加 15 秒余量，最大 75 秒）；能力读取失败可使用 75 秒及中性状态，不应把服务状态误写成未配置。普通查询和上传保留各自等待上限。
@@ -55,11 +57,18 @@
   "pageNumber": 2,
   "paragraphStart": null,
   "paragraphEnd": null,
-  "heading": null
+  "heading": null,
+  "slideNumber": null,
+  "sheetName": null,
+  "cellRange": null
 }
 ```
 
 PDF 只有 `pageNumber`；DOCX/TXT 的 `pageNumber=null`，使用从 1 开始的 `paragraphStart/paragraphEnd`。DOCX 标题可有 `heading`，TXT 不推断标题。定位对应解析规范化的原文与实际文件，不能把段落编号当页码。
+
+PPT/PPTX 使用 `slideNumber`（原文件实际从 1 开始的幻灯片序号），例如 `slideNumber: 3` 显示“第 3 张幻灯片”。XLS/XLSX 使用 `sheetName` 与 `cellRange`，例如 `sheetName: "检索评估", cellRange: "B3:D8"` 显示“工作表「检索评估」· B3:D8”。Excel 正文含逐单元格地址，范围是包围范围而不是承诺区域中每个格子都有正文；长单元格拆分后的多个片段可有相同地址。PPT 与 Excel 的 `pageNumber/paragraphStart/paragraphEnd` 均为空。
+
+三个 Office 位置字段为可选扩展，旧资料和其他格式返回 `null`，旧字段未改义。前端建议依次判断幻灯片、工作表、PDF 页码、段落位置，均无值时显示“原文片段”；按纯文本插入工作表名和正文。`search`、`sources`、`ask.citations` 和 `ask.evidence.source` 共享此结构，逐字引文仍以 `Source.text` 为准。位置字段仅提供核对位置，Office 在线预览及跳转由正式前端另行集成，下载继续携带 `version`。
 
 `SearchResult` 为 `{"status":"ok","hits":[{"source":Source,"score":1.23,"coverage":0.75}]}`。`score` 是 BM25 分数，`coverage` 是问题词项覆盖比例。`status=no_evidence` 表示没有达到词面门槛的候选；`sources_changed` 表示候选在返回前失效，需要重新查询。这两个状态的 `hits` 为空。
 
@@ -90,6 +99,8 @@ PDF 只有 `pageNumber`；DOCX/TXT 的 `pageNumber=null`，使用从 1 开始的
 回退 `reason` 可能为 `unconfigured/timeout/provider_error/invalid_response/invalid_citation/interrupted`。模型承认不足时是 `insufficient_evidence`。请求本身非法返回 `code=400`，无权限课程、文件或来源返回 `404`，学生执行管理操作返回 `403`，发布未就绪资料返回 `409`。
 
 ## 并发和数据库交接
+
+新增 `rag_chunk_location(chunk_id, slide_number, sheet_name, cell_range)`，`chunk_id` 为主键并外键关联 `rag_chunk(id) ON DELETE CASCADE`。启动脚本自动补建，查询使用 LEFT JOIN 兼容旧片段；更换资料、重处理或删除会在原事务中删除对应位置。正式环境的 F 需先落地同一建表语句并验证 MySQL，不要将幻灯片或单元格位置塞入 PDF/段落字段。当前解析契约版本 `office-v2-smartcn-v1`，旧解析版本主动重处理会递增版本并撤下，需核对后重新发布。
 
 材料变更事务采用 READ_COMMITTED 和单资料行锁。这样 MySQL 默认 REPEATABLE_READ 的旧快照不会在等待其他更新后影响幂等重试返回。调用方若在外层已有事务，应也使用 READ_COMMITTED；不要在长生命周期事务中持有模型网络调用。问答编排本身不持有数据库事务，模型结束后重新读取课程权限及候选资格。
 

@@ -12,7 +12,7 @@
 
 项目处于第一周基础工程阶段，已建立后端、管理后台和学生小程序工程。管理后台使用 Vue 3、Vite、Vue Router 和 Element Plus，按定稿原型提供登录、角色菜单和七个页面框架：工作台、课程与章节、资料管理、题库维护、问答与反馈、学习统计、用户与角色。登录、身份和课程范围走真实接口；资料、题库、问答和统计仍是示例数据，上传与发布留到第 2 周。学生端平台构建与真实浏览器联调见运行说明。
 
-E 的解析、BM25 检索和引用问答模块现已提供真实后端接口、独立演示页及固定开发评估。支持文本型 PDF、DOCX、TXT，按课程和资料版本隔离来源；增加技术标识符核对、逐条引文位置和旧版本操作保护，未配置模型时返回检索原文。已完成真实 DeepSeek 问答及公网 HTTPS 联调，密钥由运行后端的负责人私有配置，仓库不包含个人凭据。[模块运行与交接说明](docs/rag/README.md)、[接口约定](docs/rag/api.md)、[评估与改进对照](docs/rag/evaluation/README.md)、[私有配置与公网联调](docs/rag/deployment.md)。正式两端接入、问答历史和独立模型质量评估仍需按团队计划完成。
+E 的解析、BM25 检索和引用问答模块现已提供真实后端接口、独立演示页及固定开发评估。支持文本型 PDF、DOCX、TXT、PPT/PPTX、XLS/XLSX，保留页、段落、幻灯片或工作表/单元格位置，按课程和资料版本隔离来源；增加技术标识符核对、逐条引文位置和旧版本操作保护，未配置模型时返回检索原文。已完成真实 DeepSeek 问答及公网 HTTPS 联调，密钥由运行后端的负责人私有配置，仓库不包含个人凭据。[模块运行与交接说明](docs/rag/README.md)、[接口约定](docs/rag/api.md)、[评估与改进对照](docs/rag/evaluation/README.md)、[私有配置与公网联调](docs/rag/deployment.md)。正式两端接入、问答历史和独立模型质量评估仍需按团队计划完成。
 
 ### 计划功能
 
@@ -40,7 +40,7 @@ AI 回答用于辅助学习，使用时应结合原始课程资料核对。
 
 ### 本地运行
 
-参阅[运行与验证说明](docs/run-guide.md)，其中包含三端启动、演示账号、联调步骤及第一周待办。[六周开发计划](docs/six-week-development-plan.md)提供完整分工。
+参阅[运行与验证说明](docs/run-guide.md)，其中包含三端启动、演示账号、联调步骤及第一周待办。[六周开发计划](docs/six-week-development-plan.md)提供完整分工。[F 第一周数据库与验收交付](docs/week1-f/README.md)包含 ER 图、初始化数据、实测结果和复现步骤。
 
 真实 API Key、数据库密码等敏感配置应保存在本地环境变量或被 Git 忽略的配置文件中，不得提交到仓库。
 
@@ -85,7 +85,7 @@ Campus AI Course Assistant is a course learning support system for students at o
 
 The week-one scaffold contains a backend, an administration web app, and a student mini-program with an H5 development entry. The admin app signs in against the real auth API, shows teacher and administrator menus, and frames the seven management pages. Material, quiz, Q&A, and statistics screens still use sample data. See the setup guide for accounts and which calls are mocked.
 
-The parsing/BM25/citation-RAG module now exposes real protected APIs and a standalone demo at `/rag-demo.html`. It supports text PDF, DOCX and UTF-8 TXT, authoritative course/publication/version filtering, and explicit retrieval fallback when no model is configured. Real DeepSeek generation and public HTTPS access have been verified with private backend credentials; no personal credentials are included in the repository. See [module documentation](docs/rag/README.md), [developer-authored evaluation](docs/rag/evaluation/README.md), and [private deployment setup](docs/rag/deployment.md). Full client integration, history and independent model-quality evaluation remain team follow-up work.
+The parsing/BM25/citation-RAG module now exposes real protected APIs and a standalone demo at `/rag-demo.html`. It supports text PDF, DOCX, UTF-8 TXT, PPT/PPTX and XLS/XLSX with page, paragraph, slide or sheet/cell references, authoritative course/publication/version filtering, and explicit retrieval fallback when no model is configured. Real DeepSeek generation and public HTTPS access have been verified with private backend credentials; no personal credentials are included in the repository. See [module documentation](docs/rag/README.md), [developer-authored evaluation](docs/rag/evaluation/README.md), and [private deployment setup](docs/rag/deployment.md). Full client integration, history and independent model-quality evaluation remain team follow-up work.
 
 ### Planned Features
 
