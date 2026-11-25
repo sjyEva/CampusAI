@@ -1,19 +1,33 @@
 package edu.campusai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.campusai.auth.AuthController;
+import edu.campusai.auth.DemoAccounts;
+import edu.campusai.auth.SessionTokens;
+import edu.campusai.web.ApiExceptionHandler;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -161,7 +175,9 @@ class CourseAccessTest {
                         .content("""
                                 {"username": "student", "password": "wrong"}
                                 """))
-                .andExpect(jsonPath("$.code").value(500))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401))
+                .andExpect(jsonPath("$.msg").value("账号或密码错误"))
                 .andExpect(jsonPath("$.token").doesNotExist());
 
         String auth = login("student");
@@ -169,6 +185,47 @@ class CourseAccessTest {
                 .andExpect(jsonPath("$.code").value(200));
         mvc.perform(get("/campusai/courses").header(HttpHeaders.AUTHORIZATION, auth))
                 .andExpect(jsonPath("$.code").value(401));
+    }
+
+    @Test
+    void unknownEndpointMethodAndMediaTypeUseJsonAndKeepHttpSemantics() throws Exception {
+        String auth = login("teacher");
+        mvc.perform(get("/campusai/missing-endpoint").header(HttpHeaders.AUTHORIZATION, auth))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.msg").value("接口或资源不存在"));
+        mvc.perform(post("/getInfo").header(HttpHeaders.AUTHORIZATION, auth))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().string(HttpHeaders.ALLOW, containsString("GET")))
+                .andExpect(jsonPath("$.code").value(405))
+                .andExpect(jsonPath("$.msg").value("该接口不支持此请求方法"));
+        mvc.perform(post("/login").contentType(MediaType.TEXT_PLAIN).content("student"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(header().string(HttpHeaders.ACCEPT, containsString("application/json")))
+                .andExpect(jsonPath("$.code").value(415))
+                .andExpect(jsonPath("$.msg").value("该接口不支持此请求内容类型"));
+    }
+
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void internalFailuresAreLoggedAndReturnOnlyThePublicMessage(
+            @Autowired SessionTokens tokens, @Autowired DemoAccounts accounts, CapturedOutput output) throws Exception {
+        for (RuntimeException failure : new RuntimeException[] {
+                new InternalAuthenticationServiceException("auth-provider-test-diagnostic"),
+                new DataAccessResourceFailureException("database-test-diagnostic")}) {
+            var controller = new AuthController(request -> { throw failure; }, tokens, accounts);
+            MockMvc isolated = MockMvcBuilders.standaloneSetup(controller)
+                    .setControllerAdvice(new ApiExceptionHandler()).build();
+            var result = isolated.perform(post("/login").contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"username\":\"student\",\"password\":\"test\"}"))
+                    .andExpect(status().isInternalServerError())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                    .andReturn();
+            assertThat(json.readTree(result.getResponse().getContentAsByteArray()))
+                    .isEqualTo(json.readTree("{\"code\":500,\"msg\":\"服务暂时不可用，请稍后重试\"}"));
+            assertThat(output.getAll()).contains(failure.getMessage());
+        }
     }
 
     private String login(String username) throws Exception {
