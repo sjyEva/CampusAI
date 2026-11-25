@@ -63,8 +63,8 @@ $wrongLogin = Invoke-CampusApi -Path '/login' -Method POST -Body @{
     username = 'student'
     password = "$DemoPassword-incorrect"
 }
-if ($wrongLogin.Payload.token -or ($wrongLogin.Status -eq 200 -and $wrongLogin.Payload.code -eq 200)) {
-    throw 'Invalid password was accepted.'
+if ($wrongLogin.Status -ne 200 -or $wrongLogin.Payload.code -ne 401 -or $wrongLogin.Payload.token) {
+    throw 'A wrong password must return HTTP 200, business code 401 and no token.'
 }
 Write-Host 'PASS invalid password denied'
 
