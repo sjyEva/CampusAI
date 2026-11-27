@@ -40,7 +40,7 @@ AI 回答用于辅助学习，使用时应结合原始课程资料核对。
 
 ### 本地运行
 
-参阅[运行与验证说明](docs/run-guide.md)，其中包含三端启动、演示账号、联调步骤及第一周待办。[六周开发计划](docs/six-week-development-plan.md)提供完整分工。
+参阅[运行与验证说明](docs/run-guide.md)，其中包含三端启动、演示账号、联调步骤及第一周待办。[六周开发计划](docs/six-week-development-plan.md)提供完整分工。[F 第一周数据库与验收交付](docs/week1-f/README.md)包含 ER 图、初始化数据、实测结果和复现步骤。
 
 真实 API Key、数据库密码等敏感配置应保存在本地环境变量或被 Git 忽略的配置文件中，不得提交到仓库。
 
