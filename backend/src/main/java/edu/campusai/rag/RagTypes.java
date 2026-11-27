@@ -6,7 +6,12 @@ public final class RagTypes {
     private RagTypes() {}
 
     public record Material(String id, long courseId, String filename, String parseStatus,
-                           boolean published, int version, int chunkCount, String errorMessage) {}
+                           boolean published, int version, int chunkCount, String errorMessage, Long chapterId) {
+        public Material(String id, long courseId, String filename, String parseStatus,
+                        boolean published, int version, int chunkCount, String errorMessage) {
+            this(id, courseId, filename, parseStatus, published, version, chunkCount, errorMessage, null);
+        }
+    }
 
     public record Source(String chunkId, String materialId, long courseId, int version,
                          String filename, String text, Integer pageNumber,

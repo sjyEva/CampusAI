@@ -62,3 +62,13 @@ CREATE TABLE IF NOT EXISTS rag_chunk_location (
     cell_range VARCHAR(64),
     FOREIGN KEY (chunk_id) REFERENCES rag_chunk(id) ON DELETE CASCADE
 );
+
+-- Additive week-two metadata: old materials keep their UUID, version and sources.
+-- A chapter may only be assigned through the service after checking course ownership.
+-- Deleting a chapter with attached materials is rejected until they are reassigned.
+CREATE TABLE IF NOT EXISTS rag_material_chapter (
+    material_id VARCHAR(36) PRIMARY KEY,
+    chapter_id BIGINT NOT NULL,
+    FOREIGN KEY (material_id) REFERENCES rag_material(id) ON DELETE CASCADE,
+    FOREIGN KEY (chapter_id) REFERENCES campus_course_chapter(id)
+);

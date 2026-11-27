@@ -8,6 +8,8 @@ dist/
 unpackage/
 target/
 *.log
+__pycache__/
+*.pyc
 *.mv.db
 *.trace.db
 

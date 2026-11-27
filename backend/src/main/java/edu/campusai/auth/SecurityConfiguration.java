@@ -5,6 +5,7 @@ import java.io.IOException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.campusai.web.ApiResult;
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,9 +50,10 @@ public class SecurityConfiguration {
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(request -> request
+                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/captchaImage").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/rag-demo.html", "/rag-demo.css", "/rag-demo.js").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/rag-demo.html", "/rag-demo.css", "/rag-demo.js", "/rag-stream.js").permitAll()
                         .requestMatchers("/getRouters").hasAnyRole("admin", "teacher")
                         .requestMatchers("/campusai/courses", "/campusai/courses/**")
                             .hasAnyRole("admin", "teacher", "student")
