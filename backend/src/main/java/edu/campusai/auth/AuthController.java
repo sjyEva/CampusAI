@@ -6,9 +6,9 @@ import java.util.Map;
 import edu.campusai.web.ApiResult;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,8 +38,8 @@ public class AuthController {
             Authentication result = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
             return ApiResult.success().with("token", tokens.issue(result));
-        } catch (AuthenticationException error) {
-            return ApiResult.error(500, "账号或密码错误");
+        } catch (BadCredentialsException error) {
+            return ApiResult.error(401, "账号或密码错误");
         }
     }
 

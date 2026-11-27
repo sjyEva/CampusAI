@@ -15,3 +15,5 @@ target/
 .vscode/
 .DS_Store
 project.private.config.json
+/student-miniapp/src/project.config.json
+/student-miniapp/project.config.json
