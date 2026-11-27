@@ -21,17 +21,25 @@ public class RagMaterialService {
     private final RagRepository repository;
     private final DocumentParser parser;
     private final Bm25Engine engine;
+    private final RagChapterLinks chapters;
 
-    public RagMaterialService(RagAccess access, RagRepository repository, DocumentParser parser, Bm25Engine engine) {
+    public RagMaterialService(RagAccess access, RagRepository repository, DocumentParser parser, Bm25Engine engine,
+                              RagChapterLinks chapters) {
         this.access = access;
         this.repository = repository;
         this.parser = parser;
         this.engine = engine;
+        this.chapters = chapters;
     }
 
     public List<Material> list(Account account, long courseId) {
+        return list(account, courseId, null);
+    }
+
+    public List<Material> list(Account account, long courseId, Long chapterId) {
         access.read(account, courseId);
-        return repository.list(courseId, !account.role().equals("student"));
+        chapters.requireChapter(courseId, chapterId);
+        return repository.list(courseId, !account.role().equals("student"), chapterId);
     }
 
     public Material detail(Account account, long courseId, String id) {
@@ -45,11 +53,27 @@ public class RagMaterialService {
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public Material upload(Account account, long courseId, String filename, byte[] content) {
+        return upload(account, courseId, filename, content, null);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Material upload(Account account, long courseId, String filename, byte[] content, Long chapterId) {
         access.manage(account, courseId);
+        chapters.requireChapterForWrite(courseId, chapterId);
         validateUpload(filename, content);
         String id = UUID.randomUUID().toString();
         repository.create(id, courseId, filename, content, sha(content));
+        chapters.assign(id, chapterId);
         return process(repository.stored(courseId, id, true), filename, content);
+    }
+
+    @Transactional(isolation = Isolation.READ_COMMITTED)
+    public Material assignChapter(Account account, long courseId, String id, Long chapterId, int expectedVersion) {
+        access.manage(account, courseId);
+        checkVersion(repository.stored(courseId, id, true), expectedVersion);
+        chapters.requireChapterForWrite(courseId, chapterId);
+        chapters.assign(id, chapterId);
+        return repository.material(courseId, id);
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)

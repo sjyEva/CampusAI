@@ -1,0 +1,2 @@
+Residual connections add the input to the transformed output.
+They provide a direct path for gradient propagation.

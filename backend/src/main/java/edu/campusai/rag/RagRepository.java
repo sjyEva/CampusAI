@@ -21,16 +21,24 @@ public class RagRepository {
     private static final String MATERIAL_SELECT = """
             SELECT m.id, m.course_id, m.filename, m.parse_status, m.published, m.version,
                    (SELECT COUNT(*) FROM rag_chunk c WHERE c.material_id=m.id AND c.version=m.version) AS chunk_count,
-                   m.error_message FROM rag_material m
+                   m.error_message,
+                   (SELECT mc.chapter_id FROM rag_material_chapter mc WHERE mc.material_id=m.id) AS chapter_id
+            FROM rag_material m
             """;
     private final JdbcClient jdbc;
 
     public RagRepository(JdbcClient jdbc) { this.jdbc = jdbc; }
 
     public List<Material> list(long courseId, boolean management) {
+        return list(courseId, management, null);
+    }
+
+    public List<Material> list(long courseId, boolean management, Long chapterId) {
         return jdbc.sql(MATERIAL_SELECT + " WHERE m.course_id = :course" +
-                        (management ? "" : " AND m.published=TRUE AND m.parse_status='READY'") + " ORDER BY m.created_at,m.id")
-                .param("course", courseId).query(Material.class).list();
+                        (management ? "" : " AND m.published=TRUE AND m.parse_status='READY'") +
+                        " AND (:chapter IS NULL OR EXISTS (SELECT 1 FROM rag_material_chapter mc WHERE mc.material_id=m.id AND mc.chapter_id=:chapter))" +
+                        " ORDER BY m.created_at,m.id")
+                .param("course", courseId).param("chapter", chapterId, java.sql.Types.BIGINT).query(Material.class).list();
     }
 
     public Material material(long courseId, String id) {

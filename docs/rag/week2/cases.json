@@ -1,0 +1,26 @@
+{
+  "provenance": "Self-authored CampusAI integration fixtures; no teacher courseware or API credentials.",
+  "hitQuestion": "residual connections",
+  "noEvidenceQuestion": "qubit entanglement",
+  "replacementQuestion": "software testing",
+  "expectedLocations": {
+    "pdf": {
+      "pageNumber": 1
+    },
+    "docx": {
+      "paragraphStart": 1
+    },
+    "txt": {
+      "paragraphStart": 1
+    }
+  },
+  "files": {
+    "broken.pdf": "b24eb045999935b28a371b5b3f40acf08d5dc3a873ca918cb50aa075a1523ee6",
+    "lesson.docx": "0005c2932bdc87169af4edcbcf6aa3f50c8caeb2b4f141fdae479aa3778d68ae",
+    "lesson.pdf": "f28a4131d2fa91bc16b8ed6506359336c1f7a5133e5c854a0899217d782c1aab",
+    "lesson.txt": "49363c34b7f08eb45c0470b283aa5fc0fcf8761475190a16c21416957610faf1",
+    "replacement.docx": "f8ac1c61cdb1321db093928e62aa71e8d73568432fe020ff71efd0be1fbb9d49",
+    "replacement.pdf": "954e81caeacd065c948d68d12cc48e1a9bf889cd1bd023df1593f9484f996c55",
+    "replacement.txt": "d82e4a9494bfde4d1e0d24ebadbd493e1fbf20d4f92cd53725ed31083f723e1e"
+  }
+}

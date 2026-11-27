@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
@@ -64,6 +65,38 @@ public class RagService {
         List<Source> sources = search.hits().stream().map(SearchHit::source).toList();
         ModelGateway.Generation generation = model.generate(question,
                 sources.stream().map(source -> new ModelGateway.ModelEvidence(source.chunkId(), source.text())).toList());
+        return finishAnswer(account, courseId, search, generation);
+    }
+
+    public void validateStream(Account account, long courseId, String question) {
+        access.read(account, courseId);
+        validateQuestion(question);
+    }
+
+    public Answer askStream(Account account, long courseId, String question, Consumer<String> status,
+                            Consumer<String> delta, ModelGateway.StreamCancellation cancellation) {
+        status.accept("retrieving");
+        SearchResult search = search(account, courseId, question, 3);
+        if (search.hits().isEmpty()) {
+            return new Answer(search.status(), search.status().equals("sources_changed")
+                    ? "资料状态已变化，请重新提问。" : "未在当前课程已发布资料中检索到有效依据，请补充术语或向教师反馈。",
+                    List.of(), List.of(), search.status());
+        }
+        List<Source> sources = search.hits().stream().map(SearchHit::source).toList();
+        status.accept(model.isConfigured() ? "generating" : "validating");
+        ModelGateway.Generation generation = model.generateStream(question,
+                sources.stream().map(source -> new ModelGateway.ModelEvidence(source.chunkId(), source.text())).toList(),
+                text -> {
+                    access.read(account, courseId);
+                    if (!repository.allCurrent(courseId, sources)) throw new RagException(409, "资料状态已变化，请重新提问。");
+                    delta.accept(text);
+                }, cancellation);
+        status.accept("validating");
+        return finishAnswer(account, courseId, search, generation);
+    }
+
+    private Answer finishAnswer(Account account, long courseId, SearchResult search, ModelGateway.Generation generation) {
+        List<Source> sources = search.hits().stream().map(SearchHit::source).toList();
         // A provider call can outlive a publication/version or enrollment change.
         // Never return its stale evidence, even in a fallback response.
         access.read(account, courseId);

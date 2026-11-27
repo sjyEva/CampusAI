@@ -1,0 +1,153 @@
+{
+  "baseline": "39851812ff6d22c85ea6f105da10b19577cebbb4",
+  "environment": "Windows / JDK17 / H2 file database in MySQL mode / loopback HTTP; not a shared-team UI acceptance",
+  "backendTests": {
+    "tests": 155,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontendStreamTests": {
+    "tests": 5,
+    "failures": 0
+  },
+  "httpChecks": 127,
+  "httpPassed": true,
+  "modelRequests": 0,
+  "jarSha256": "e66ea5b00a62a44c9881df396f0c7a52fbb377b5c232131c347e56ee07fd8c24",
+  "startedUtc": "2026-11-27T03:15:22.800499+00:00",
+  "finishedUtc": "2026-11-27T03:15:33.085174+00:00",
+  "localFixtureRecords": [
+    {
+      "material": {
+        "id": "0d628544-1814-4e84-8e03-46a529943d44",
+        "courseId": 1,
+        "filename": "week2-e30f9c09dd-lesson.pdf",
+        "parseStatus": "READY",
+        "published": true,
+        "version": 1,
+        "chunkCount": 1,
+        "errorMessage": null,
+        "chapterId": 102
+      },
+      "firstSource": {
+        "chunkId": "1fc2d68e-8c68-3a44-ae9b-2d689224e613",
+        "materialId": "0d628544-1814-4e84-8e03-46a529943d44",
+        "courseId": 1,
+        "version": 1,
+        "filename": "week2-e30f9c09dd-lesson.pdf",
+        "text": "Residual connections add the input to the transformed output.\nThey provide a direct path for gradient propagation.",
+        "pageNumber": 1,
+        "paragraphStart": null,
+        "paragraphEnd": null,
+        "heading": null,
+        "slideNumber": null,
+        "sheetName": null,
+        "cellRange": null
+      }
+    },
+    {
+      "material": {
+        "id": "4a7b2006-cba4-4eb9-a975-bd29d89ba1e4",
+        "courseId": 1,
+        "filename": "week2-e30f9c09dd-lesson.docx",
+        "parseStatus": "READY",
+        "published": true,
+        "version": 1,
+        "chunkCount": 1,
+        "errorMessage": null,
+        "chapterId": 102
+      },
+      "firstSource": {
+        "chunkId": "5fdec894-6e0c-32f1-a950-99363f4d71e2",
+        "materialId": "4a7b2006-cba4-4eb9-a975-bd29d89ba1e4",
+        "courseId": 1,
+        "version": 1,
+        "filename": "week2-e30f9c09dd-lesson.docx",
+        "text": "Residual connections add the input to the transformed output.\nThey provide a direct path for gradient propagation.",
+        "pageNumber": null,
+        "paragraphStart": 1,
+        "paragraphEnd": 2,
+        "heading": null,
+        "slideNumber": null,
+        "sheetName": null,
+        "cellRange": null
+      }
+    },
+    {
+      "material": {
+        "id": "76e12bf2-f695-487e-8d1a-1f45c8e1bafe",
+        "courseId": 1,
+        "filename": "week2-e30f9c09dd-lesson.txt",
+        "parseStatus": "READY",
+        "published": true,
+        "version": 1,
+        "chunkCount": 1,
+        "errorMessage": null,
+        "chapterId": 102
+      },
+      "firstSource": {
+        "chunkId": "3f69168c-ebaa-35f9-81c6-777a16c7ec9a",
+        "materialId": "76e12bf2-f695-487e-8d1a-1f45c8e1bafe",
+        "courseId": 1,
+        "version": 1,
+        "filename": "week2-e30f9c09dd-lesson.txt",
+        "text": "Residual connections add the input to the transformed output.\nThey provide a direct path for gradient propagation.",
+        "pageNumber": null,
+        "paragraphStart": 1,
+        "paragraphEnd": 2,
+        "heading": null,
+        "slideNumber": null,
+        "sheetName": null,
+        "cellRange": null
+      }
+    }
+  ],
+  "fileDatabaseRestart": {
+    "success": true,
+    "keptMaterialsVerified": 3,
+    "checks": [
+      {
+        "id": "0d628544-1814-4e84-8e03-46a529943d44",
+        "version": 1,
+        "chapterId": 102,
+        "sourceId": "1fc2d68e-8c68-3a44-ae9b-2d689224e613",
+        "passed": true
+      },
+      {
+        "id": "4a7b2006-cba4-4eb9-a975-bd29d89ba1e4",
+        "version": 1,
+        "chapterId": 102,
+        "sourceId": "5fdec894-6e0c-32f1-a950-99363f4d71e2",
+        "passed": true
+      },
+      {
+        "id": "76e12bf2-f695-487e-8d1a-1f45c8e1bafe",
+        "version": 1,
+        "chapterId": 102,
+        "sourceId": "3f69168c-ebaa-35f9-81c6-777a16c7ec9a",
+        "passed": true
+      }
+    ]
+  },
+  "verifierFailureCleanup": {
+    "injectedFailure": "second final retained upload",
+    "allOwnTemporaryMaterialsRemoved": true,
+    "deletedIdsAbsentFromKeptReport": true,
+    "preexistingThreeMaterialsUnchanged": true
+  },
+  "canonicalFixtureRerun": {
+    "success": true,
+    "checks": 127,
+    "lineEndings": "LF in committed text fixtures",
+    "fixtureHashes": {
+      "broken.pdf": "b24eb045999935b28a371b5b3f40acf08d5dc3a873ca918cb50aa075a1523ee6",
+      "lesson.docx": "0005c2932bdc87169af4edcbcf6aa3f50c8caeb2b4f141fdae479aa3778d68ae",
+      "lesson.pdf": "f28a4131d2fa91bc16b8ed6506359336c1f7a5133e5c854a0899217d782c1aab",
+      "lesson.txt": "49363c34b7f08eb45c0470b283aa5fc0fcf8761475190a16c21416957610faf1",
+      "replacement.docx": "f8ac1c61cdb1321db093928e62aa71e8d73568432fe020ff71efd0be1fbb9d49",
+      "replacement.pdf": "954e81caeacd065c948d68d12cc48e1a9bf889cd1bd023df1593f9484f996c55",
+      "replacement.txt": "d82e4a9494bfde4d1e0d24ebadbd493e1fbf20d4f92cd53725ed31083f723e1e"
+    }
+  }
+}

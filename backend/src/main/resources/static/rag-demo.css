@@ -170,6 +170,10 @@ textarea { width: 100%; resize: vertical; min-height: 125px; max-height: 360px; 
 .answer-status { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; color: #6f8553; margin-bottom: 13px; font-weight: 600; }
 .answer-status.warning { color: #987338; }
 .answer-text { font-size: 13px; line-height: 1.95; color: var(--body); white-space: pre-wrap; overflow-wrap: anywhere; }
+.streaming-answer { border-left-color: #6f9c82; }
+.streaming-text { min-height: 2em; }
+.streaming-text::after { content: ""; display: inline-block; width: 2px; height: 1em; background: #6f9c82; margin-left: 4px; vertical-align: -.1em; animation: stream-caret .9s step-end infinite; }
+@keyframes stream-caret { 50% { opacity: 0; } }
 .answer-reason { font-size: 10px; line-height: 1.8; color: var(--muted); margin-top: 12px; }
 .answer-claims { list-style: none; margin: 0; padding: 0; }
 .answer-claim + .answer-claim { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line); }

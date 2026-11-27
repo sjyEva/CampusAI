@@ -124,6 +124,88 @@
     }
   }
 
+  async function streamAnswer(question, epoch, onProgress) {
+    const controller = new AbortController();
+    state.requests.set(controller, true);
+    let timedOut = false, reader, finalAnswer = null, totalBytes = 0, draftChars = 0;
+    const timer = setTimeout(() => { timedOut = true; controller.abort(); }, state.answerTimeoutMs);
+    try {
+      const response = await fetch(coursePath("/ask/stream"), {
+        method: "POST", headers: { Accept: "text/event-stream", "Content-Type": "application/json",
+          Authorization: `Bearer ${state.token}` },
+        body: JSON.stringify({ question }), signal: controller.signal,
+        cache: "no-store", credentials: "same-origin"
+      });
+      if (!response.ok || !(response.headers.get("content-type") || "").includes("text/event-stream")) {
+        let payload = null;
+        try { payload = await response.json(); } catch (_) { /* Never expose non-JSON provider/error pages. */ }
+        const code = Number(payload?.code) || response.status;
+        if (code === 401 || response.status === 401) resetSession("登录已过期，请重新登录。");
+        throw new ApiError(payload?.msg || "未能建立流式问答连接，请稍后重试。", code);
+      }
+      if (!response.body || typeof response.body.getReader !== "function" || !window.CampusAiStream) {
+        throw new ApiError("当前浏览器无法读取流式回答，请使用新版 Edge 或 Chrome。", 500);
+      }
+      const decoder = new TextDecoder("utf-8", { fatal: true });
+      const parser = window.CampusAiStream.createParser((event) => {
+        if (!current(epoch)) return;
+        if (finalAnswer) throw new ApiError("流式回答重复结束，请重新提问。", 502);
+        if (!["status", "delta", "done", "error"].includes(event.type)) return;
+        let data;
+        try { data = JSON.parse(event.data); }
+        catch (_) { throw new ApiError("流式回答格式异常，请重新提问。", 502); }
+        if (!data || typeof data !== "object" || Array.isArray(data)) throw new ApiError("流式回答格式异常，请重新提问。", 502);
+        if (event.type === "error") {
+          const code = Number(data.code) || 500;
+          if (code === 401) resetSession("登录已过期，请重新登录。");
+          throw new ApiError(typeof data.message === "string" ? data.message : "本次问答未完成，请重新提问。", code);
+        }
+        if (event.type === "delta") {
+          if (typeof data.text !== "string" || (draftChars += data.text.length) > 20000) {
+            throw new ApiError("流式回答超过限制或格式异常，请重新提问。", 502);
+          }
+          onProgress("delta", data.text);
+        } else if (event.type === "status") {
+          if (["retrieving", "generating", "validating"].includes(data.stage)) onProgress("status", data.stage);
+        } else {
+          if (!["generated", "retrieval_only", "no_evidence", "sources_changed"].includes(data.status)
+              || !Array.isArray(data.citations) || !Array.isArray(data.evidence)
+              || typeof data.answer !== "string") throw new ApiError("最终回答格式异常，请重新提问。", 502);
+          if (data.status === "generated" && (!Array.isArray(data.claims) || !data.claims.length
+              || !data.claims.every((claim) => typeof claim?.text === "string" && claim.text.trim()
+                && claim.citationNumber === data.citations.findIndex((source) => source.chunkId === claim.chunkId) + 1
+                && claimMatchesSource(claim, data.citations.find((source) => source.chunkId === claim.chunkId))))) {
+            throw new ApiError("最终引文未通过核对，请重新提问或使用原文检索。", 502);
+          }
+          finalAnswer = data;
+        }
+      });
+      reader = response.body.getReader();
+      while (!finalAnswer) {
+        const { value, done } = await reader.read();
+        if (done) {
+          parser.push(decoder.decode());
+          parser.finish();
+          break;
+        }
+        totalBytes += value.byteLength;
+        if (totalBytes > 1024 * 1024) throw new ApiError("流式回答超过限制，请重新提问。", 502);
+        parser.push(decoder.decode(value, { stream: true }));
+      }
+      if (!finalAnswer) throw new ApiError("连接在回答完成前中断，未保留未经核对的草稿，请重新提问。", 502);
+      return finalAnswer;
+    } catch (error) {
+      if (timedOut) throw new ApiError("等待回答超时，未保留未经核对的草稿，请稍后重试。", 408);
+      if (error.name === "AbortError" || error instanceof ApiError) throw error;
+      throw new ApiError("流式问答连接中断，未保留未经核对的草稿，请重新提问。", 502);
+    } finally {
+      clearTimeout(timer);
+      if (reader) { try { await reader.cancel(); } catch (_) { /* The request may already have been aborted. */ } }
+      controller.abort();
+      state.requests.delete(controller);
+    }
+  }
+
   function coursePath(suffix = "", courseId = state.courseId) {
     return `/campusai/courses/${encodeURIComponent(courseId)}/rag${suffix}`;
   }
@@ -141,7 +223,7 @@
     } else if (state.capabilityStatus === "ready") {
       badge = state.generationConfigured ? "引用问答已配置" : "原文检索模式";
       note = state.generationConfigured
-        ? "已配置生成服务，实际能否生成以本次请求结果为准。请核对回答的逐字引文。"
+        ? "回答会随模型实际返回逐步显示；完成后核对引用。生成期间的文字仅为待校验草稿。"
         : "当前未配置生成服务，提问将返回课程原文，便于直接核对来源。";
     } else if (state.capabilityStatus === "unknown") {
       badge = "问答配置待确认";
@@ -202,7 +284,7 @@
 
   function setQueryBusy(busy, mode = "ask") {
     state.busy = busy;
-    ui["ask-button"].querySelector("span").textContent = busy && mode === "ask" ? "正在查找…" : "提问并核对";
+    ui["ask-button"].querySelector("span").textContent = busy && mode === "ask" ? "正在回答…" : "提问并核对";
     ui["search-button"].textContent = busy && mode === "search" ? "正在检索…" : "只检索原文";
     updateQuestionControls();
   }
@@ -314,6 +396,7 @@
   });
 
   ui["logout-button"].addEventListener("click", async () => {
+    invalidateResults();
     ui["logout-button"].disabled = true;
     try { await api("/logout", { method: "POST", courseScoped: false, timeout: 10000 }); }
     catch (error) { if (!isAbort(error) && error.code !== 401) toast("已退出当前页面；服务未确认注销，请稍后重新登录。", true); }
@@ -577,17 +660,20 @@
     resetAnswer();
     ui["answer-empty"].hidden = true;
     ui["answer-loading"].hidden = false;
+    ui["answer-loading"].querySelector("strong").textContent = "正在查找课程资料";
+    ui["answer-loading"].querySelector("p").textContent = "检索原文并核对当前来源，请稍候。";
     setQueryBusy(true, mode);
     try {
+      const draft = mode === "ask" ? streamingPreview(question, epoch) : null;
       const result = mode === "search"
-        ? await api(coursePath(`/search?q=${encodeURIComponent(question)}&topK=3`))
-        : await api(coursePath("/ask"), { method: "POST", body: { question }, timeout: state.answerTimeoutMs });
+        ? (await api(coursePath(`/search?q=${encodeURIComponent(question)}&topK=3`))).data
+        : await streamAnswer(question, epoch, draft.update);
       if (!current(epoch)) return;
-      renderAnswer(question, result.data, mode);
+      renderAnswer(question, result, mode);
     } catch (error) {
-      if (current(epoch) && !isAbort(error)) {
-        message(ui["question-message"], error.message);
-        ui["answer-empty"].hidden = false;
+      if (current(epoch)) {
+        resetAnswer();
+        if (!isAbort(error)) message(ui["question-message"], error.message);
       }
     } finally {
       if (current(epoch)) {
@@ -595,6 +681,39 @@
         ui["answer-loading"].hidden = true;
       }
     }
+  }
+
+  function streamingPreview(question, epoch) {
+    let text = "";
+    const container = ui["answer-content"];
+    const queryLine = element("p", "result-question");
+    queryLine.append(element("span", "", "本次问题"), document.createTextNode(question));
+    const summary = element("section", "answer-summary card streaming-answer");
+    const label = element("div", "answer-status", "正在生成 · 引用待校验");
+    const draftText = element("p", "answer-text streaming-text");
+    const note = element("p", "answer-reason", "以下文字随模型实际返回显示，完成来源核对后才会形成最终回答。");
+    summary.append(label, draftText, note);
+    function show() {
+      if (!summary.isConnected) container.replaceChildren(queryLine, summary);
+      container.hidden = false;
+      ui["answer-loading"].hidden = true;
+    }
+    return {
+      update(type, value) {
+        if (!current(epoch)) return;
+        if (type === "delta") {
+          text += value;
+          draftText.textContent = text;
+          show();
+        } else if (value === "validating") {
+          if (text) { show(); label.textContent = "正在核对引用与资料状态…"; }
+          else ui["answer-loading"].querySelector("strong").textContent = "正在核对模型结果与来源";
+        } else if (value === "generating") {
+          ui["answer-loading"].querySelector("strong").textContent = "已检索到资料，正在等待模型首段回答";
+          ui["answer-loading"].querySelector("p").textContent = "文字会随模型实际返回逐步显示，完成后再核对引用。";
+        }
+      }
+    };
   }
 
   function claimMatchesSource(claim, source) {
